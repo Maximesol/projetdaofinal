@@ -27,6 +27,15 @@ async function deployGovernorContract() {
 
   console.log(`GovernorContract deployed to ${governorContract.target}`);
 
+  const deployedAddresses = { 
+    tokenGouvAddress, 
+    timeLockAddress, 
+    governorContractAddress: governorContract.target 
+  };
+  fs.writeFileSync('deployedAddresses.json', JSON.stringify(deployedAddresses, null, 2));
+
+
+
 }
 
 deployGovernorContract()
