@@ -1,6 +1,7 @@
 const hre = require("hardhat");
+const fs = require('fs');
 
-async function deployGovernorContract() {
+async function deployTokenGouv() {
   const [owner, addr1, addr2] = await hre.ethers.getSigners();
     console.log(
     "Deploying contracts with the account:",
@@ -12,7 +13,14 @@ async function deployGovernorContract() {
   const tokenGouv = await TokenGouv.deploy(owner.address);
   await tokenGouv.waitForDeployment();
 
-  console.log(`Voting deployed to ${tokenGouv.target}`);
+  console.log(`Token Gouv deployed to ${tokenGouv.target}`);
+
+  // Sauvegarder les adresses déployées
+  const tokenGouvAddress = tokenGouv.target;
+  const deployedAddresses = { tokenGouvAddress };
+  fs.writeFileSync('deployedAddresses.json', JSON.stringify(deployedAddresses, null, 2));
+
+
 
   // Appeler les fonctions pour obtenir le nom et le symbole
   const name = await tokenGouv.name();
@@ -49,7 +57,7 @@ async function deployGovernorContract() {
 
 }
 
-deployGovernorContract()
+deployTokenGouv()
   .then(() => process.exit(0))
   .catch((error) => {
     console.error(error);
