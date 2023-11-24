@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract Target is Ownable {
+contract TargetContract is Ownable {
   uint256 private value;
 
   // Emitted when the stored value changes
