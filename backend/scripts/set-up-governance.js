@@ -12,6 +12,12 @@ console.log(`TokenGouv Address: ${tokenGouvAddress}`);
 console.log(`TimeLock Address: ${timeLockAddress}`);
 console.log(`GovernorContract Address: ${governorContractAddress}`);
 
+// Transfert de propriété au contrat de la DAO
+const tokenGouv = await ethers.getContractAt("TokenGouv", tokenGouvAddress, owner);
+await tokenGouv.transferOwnership(governorContractAddress);
+console.log("Ownership of TokenGouv transferred to DAO:", governorContractAddress);
+console.log('owner de TokenGouv:', await tokenGouv.owner());
+
  // Récupérer les instances des contrats
 const timeLock = await hre.ethers.getContractAt("TimeLock", timeLockAddress, owner);
 const governorContract = await hre.ethers.getContractAt("GovernorContract", governorContractAddress, owner);
