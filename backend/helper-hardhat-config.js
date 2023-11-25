@@ -7,6 +7,8 @@ const ADDRESS_ZERO = "0x0000000000000000000000000000000000000000";
 const NEW_STORE_VALUE = 77;
 const FUNC = "store";
 const PROPOSAL_DESCRIPTION = "Proposal #1 77 in the Box!";
+const developmentChains = ["hardhat", "localhost"];
+const proposalsFiles = "proposals.json"
 
 module.exports = {
   QUORUM_PERCENTAGE,
@@ -17,4 +19,6 @@ module.exports = {
   NEW_STORE_VALUE,
   FUNC,
   PROPOSAL_DESCRIPTION,
+  developmentChains,
+  proposalsFiles,
 };
