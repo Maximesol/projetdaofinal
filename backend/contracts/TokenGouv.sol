@@ -7,7 +7,9 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
-    //uint256 public s_maxSupply = 1000000 * 10**18;
+    uint256 public constant s_maxSupply = 1000000 * 10**18;
+    uint256 public constant maxETHContribution = 10 ether; 
+    uint256 public rate = 10000; // Taux de change DCP pour 1 ETH, pour l'ico.
 
     constructor(address initialOwner)
         ERC20("TokenGouv", "DCP")
@@ -15,8 +17,21 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         ERC20Permit("TokenGouv")
     {}
 
+    function buyTokens() public payable {
+        require(msg.value > 0 && msg.value <= maxETHContribution, "Invalid ETH amount");
+        uint256 tokenAmount = msg.value * rate;
+        uint256 newTotalSupply = totalSupply() + tokenAmount;
+        require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
+        _mint(msg.sender, tokenAmount);
+    }
+
     function mint(address to, uint256 amount) public onlyOwner {
+        uint256 newTotalSupply = totalSupply() + amount;
+        require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
         _mint(to, amount);
+    }
+
+    receive() external payable {
     }
 
     // The following functions are overrides required by Solidity.
