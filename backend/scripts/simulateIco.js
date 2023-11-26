@@ -22,8 +22,6 @@ async function simulateICO() {
         {  signer: signers[10],ethAmount: "1" },
     ];
 
-
-
     for (const participant of participants) {
         const ethAmount = hre.ethers.parseEther(participant.ethAmount);
 

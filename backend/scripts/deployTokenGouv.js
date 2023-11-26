@@ -44,7 +44,7 @@ async function deployTokenGouv() {
 
   // delegate les votes
   await tokenGouv.delegate(owner.address);
-  console.log(`Delegated votes à addr1`);
+  console.log(`Delegated votes à owner`);
 
   // check les delegated votes
   const delegatedVotes = await tokenGouv.getVotes(owner.address);
