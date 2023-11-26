@@ -1,5 +1,5 @@
 const fs = require('fs');
-const {developmentChains, VOTING_DELAY, proposalsFiles} = require('../helper-hardhat-config')
+const {developmentChains, VOTING_DELAY, proposalsFiles, PROPOSAL_DESCRIPTION} = require('../helper-hardhat-config')
 const {network, ethers} = require('hardhat')
 const {moveBlocks} = require('../utils/move-block')
 
@@ -70,7 +70,7 @@ function storeProposalId(proposalId) {
     fs.writeFileSync(proposalsFiles, JSON.stringify(proposals), "utf8");
   }
 
-propose(77, "store", "Proposal #1: Store 77 in TargetContract")
+propose(77, "store", PROPOSAL_DESCRIPTION)
     .then(() => process.exit(0))
     .catch((error) => {
         console.error(error);
