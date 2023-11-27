@@ -3,6 +3,7 @@ require("dotenv/config");
 require("hardhat-gas-reporter");
 require("solidity-coverage");
 require("@nomicfoundation/hardhat-verify");
+require("hardhat-contract-sizer");
 
 const SEPOLIA_RPC_URL = process.env.SEPOLIA_RPC_URL || "";
 const PRIVATE_KEY = process.env.PRIVATE_KEY || "";
@@ -15,8 +16,8 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 200,
       },
+      //viaIR: true,  // Activé la représentation intermédiaire
     },
   },
   networks: {
@@ -40,4 +41,5 @@ module.exports = {
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
   },
+  
 };
