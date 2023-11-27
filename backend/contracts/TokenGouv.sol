@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     uint256 public constant s_maxSupply = 1000000 * 10**18;
-    uint256 public constant maxETHContribution = 10 ether; 
+    uint256 public constant maxETHContribution = 10 ether; // somme max à l'achat pour l'ICO
     uint256 public rate = 10000; // Taux de change DCP pour 1 ETH, pour l'ico.
 
     constructor(address initialOwner)
