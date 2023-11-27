@@ -52,6 +52,10 @@ async function propose(args, functiontoCall, proposalDescription) {
     // The block number the proposal voting expires
     console.log(`Current Proposal Deadline: ${proposalDeadline}`)
 
+    // check le nombre de proposition
+    const proposalCount = await governorContract.getNumberOfProposals()
+    console.log(`Current Proposal Count: ${proposalCount}`)
+
 
 }
 
