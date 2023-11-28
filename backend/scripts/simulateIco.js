@@ -4,9 +4,16 @@ const fs = require('fs');
 
 async function simulateICO() {
     const signers = await hre.ethers.getSigners();
+    console.log(`Signer 0: ${signers[0].address}`);
     const {tokenGouvAddress } = JSON.parse(fs.readFileSync('deployedAddresses.json', 'utf8'));
     const tokenGouv = await hre.ethers.getContractAt("TokenGouv", tokenGouvAddress, signers[0].address);
     
+    // Ajouter les participants à la liste blanche
+    for (let i = 1; i <= 10; i++) {
+        console.log(`Adding ${signers[i].address} to whitelist`);
+        const addToWhitelistTx = await tokenGouv.connect(signers[0]).addToWhitelist(signers[i].address);
+        await addToWhitelistTx.wait();
+    }
 
     // Liste des adresses et des montants en ETH pour l'ICO
     const participants = [

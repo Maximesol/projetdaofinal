@@ -7,9 +7,16 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 
 contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
+
+    event Whitelisted(address investor);
+
+
     uint256 public constant s_maxSupply = 1000000 * 10**18;
-    uint256 public constant maxETHContribution = 10 ether; // somme max à l'achat pour l'ICO
-    uint256 public rate = 10000; // Taux de change DCP pour 1 ETH, pour l'ico.
+    uint256 public constant s_maxETHContributionIco = 10 ether;
+    uint256 public rateIco = 5000;
+    //uint256 public icoStartTime;
+    //uint256 public icoEndTime;
+    mapping(address => bool) private whitelist;
 
     constructor(address initialOwner)
         ERC20("TokenGouv", "DCP")
@@ -17,9 +24,25 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         ERC20Permit("TokenGouv")
     {}
 
+    function addToWhitelist(address investor) public onlyOwner {
+    require(!whitelist[investor], "Investor already whitelisted");
+    whitelist[investor] = true;
+    emit Whitelisted(investor);
+}
+
+    function removeFromWhitelist(address investor) public onlyOwner {
+        whitelist[investor] = false;
+    }
+
+    function isWhitelisted(address investor) public view returns (bool) {
+        return whitelist[investor];
+    }
+
     function buyTokens() public payable {
-        require(msg.value > 0 && msg.value <= maxETHContribution, "Invalid ETH amount");
-        uint256 tokenAmount = msg.value * rate;
+        //require(block.timestamp >= icoStartTime && block.timestamp <= icoEndTime, "ICO not active");
+        require(isWhitelisted(msg.sender), "Address not whitelisted");
+        require(msg.value > 0 && msg.value <= s_maxETHContributionIco, "Invalid ETH amount");
+        uint256 tokenAmount = msg.value * rateIco;
         uint256 newTotalSupply = totalSupply() + tokenAmount;
         require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
         _mint(msg.sender, tokenAmount);
@@ -32,9 +55,10 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     }
 
     receive() external payable {
+        // Logique pour la gestion des Ethers reçus, par exemple transfert à une adresse de trésorerie
     }
 
-    // The following functions are overrides required by Solidity.
+    // Overrides requis par Solidity
 
     function _update(address from, address to, uint256 value)
         internal
@@ -50,5 +74,9 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         returns (uint256)
     {
         return super.nonces(owner);
+    }
+
+    function setIcoRate(uint256 newRate) public onlyOwner {
+        rateIco = newRate;
     }
 }
