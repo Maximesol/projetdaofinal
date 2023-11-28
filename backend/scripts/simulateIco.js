@@ -38,6 +38,11 @@ async function simulateICO() {
 
     }
 
+    // Délégation des votes par signers[1]
+    console.log(`Signer[1] (${signers[1].address}) delegating votes to self.`);
+    const delegateTx = await tokenGouv.connect(signers[1]).delegate(signers[1].address);
+    await delegateTx.wait();
+
     
     const contractEthBalance = await hre.ethers.provider.getBalance(tokenGouvAddress);
     console.log(`Balance en ETH du contrat TokenGouv: ${hre.ethers.formatEther(contractEthBalance)} ETH`);
