@@ -4,6 +4,7 @@ const { network, ethers } = require('hardhat');
 const { moveBlocks } = require('../utils/move-block');
 
 async function main() {
+    const signers = await hre.ethers.getSigners();
     const proposals = JSON.parse(fs.readFileSync(proposalsFiles, "utf8"));
     const proposalId = proposals[network.config.chainId].at(-1);
     const voteWay = 1; // For
@@ -19,7 +20,11 @@ async function main() {
     const quorumNeeded = await governor.quorum(currentBlock - 1);
     console.log(`Quorum needed: ${quorumNeeded}`);
 
+    console.log(`Signer[0] (${signers[0].address}) is now voting...`);
     await vote(proposalId, voteWay, reason, governor);
+
+    console.log(`Signer[1] (${signers[1].address}) is now voting...`);
+    await voteAsSigner(proposalId, voteWay, reason, governor, signers[1]);
 
     const proposalAfterVote = await governor.state(proposalId);
     console.log(`Proposal state after voting: ${proposalAfterVote}`);
@@ -38,6 +43,14 @@ async function vote(proposalId, voteWay, reason, governor) {
     const voteTxReceipt = await voteTx.wait(1);
     console.log(`Voted with reason: ${reason}`);
     console.log(voteTxReceipt.logs[0].args[4]); // Afficher la raison du vote
+}
+
+async function voteAsSigner(proposalId, voteWay, reason, governor, signer) {
+    console.log(`Voting as ${signer.address}...`);
+    const voteTx = await governor.connect(signer).castVoteWithReason(proposalId, voteWay, reason);
+    const voteTxReceipt = await voteTx.wait(1);
+    console.log(`Voted as ${signer.address} with reason: ${reason}`);
+    // Affiche les détails du vote si nécessaire
 }
 
 main()
