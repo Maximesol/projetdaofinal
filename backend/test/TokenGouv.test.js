@@ -5,10 +5,10 @@ describe("TokenGouv Contract", function () {
 
   // Fixture pour déployer le contrat
   async function deployTokenGouv() {
-    const [owner, addr1, addr2] = await ethers.getSigners();
+    const [owner, addr1, addr2, timeLock] = await ethers.getSigners();
     const TokenGouv = await ethers.getContractFactory("TokenGouv");
     const tokenGouv = await TokenGouv.deploy(owner.address);
-    return { tokenGouv, owner, addr1, addr2 };
+    return { tokenGouv, owner, addr1, addr2, timeLock};
   }
 
   describe("Deployment", function () {
@@ -51,24 +51,6 @@ describe("TokenGouv Contract", function () {
         .to.emit(tokenGouv, "Whitelisted")
         .withArgs(addr1.address);
     });
-
-
-    // removeFromWhitelist
-
-    it("Should allow owner to remove an address from whitelist", async function () {
-      const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
-      await tokenGouv.addToWhitelist(addr1.address);
-      await tokenGouv.removeFromWhitelist(addr1.address);
-      expect(await tokenGouv.isWhitelisted(addr1.address)).to.be.false;
-    });
-
-    it("Should revert for non-owner trying to remove an address from whitelist", async function () {
-      const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
-      await tokenGouv.addToWhitelist(addr1.address);
-      await expect(tokenGouv.connect(addr1).removeFromWhitelist(addr1.address))
-        .to.be.revertedWithCustomError(tokenGouv, "OwnableUnauthorizedAccount");
-    });
-
   })});
 
   describe("Token Purchase", function () {
@@ -136,6 +118,40 @@ describe("TokenGouv Contract", function () {
       expect(await tokenGouv.totalSupply()).to.equal(1);
     });
   })
+
+  describe("transferEth", function () {
+    it("Should revert when non-timeLock address tries to call transferEth", async function () {
+      const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
+      const amountToTransfer = ethers.parseEther("0.1");
+      const recipient = addr1.address; // Une adresse destinataire pour le transfert d'ETH
+  
+      await expect(tokenGouv.connect(addr1).transferEth(recipient, amountToTransfer))
+        .to.be.revertedWith("Caller is not TimeLock");
+    });
+
+    it("Should allow timeLock address to call transferEth and transfer ETH", async function () {
+      const { owner, tokenGouv, timeLock, addr1 } = await loadFixture(deployTokenGouv);
+      await tokenGouv.setTimeLockAddress(timeLock.address);
+    
+      // Envoi d'ETH au contrat
+      const amountToSendToContract = ethers.parseEther("1.0");
+      await owner.sendTransaction({ to: tokenGouv.target, value: amountToSendToContract });
+
+
+      const amountToTransfer = ethers.parseEther("0.1");
+      const recipient = addr1.address; // Une adresse destinataire pour le transfert d'ETH
+
+      const initialRecipientBalance = await ethers.provider.getBalance(recipient);
+      await expect(tokenGouv.connect(timeLock).transferEth(recipient, amountToTransfer)).not.to.be.reverted;
+      const finalRecipientBalance = await ethers.provider.getBalance(recipient);
+      expect(finalRecipientBalance - initialRecipientBalance).to.equal(amountToTransfer);
+
+
+    });
+  });
+
+
+
   describe("receive", function () {
     it("should take all the sent ethers", async function () {
       const { tokenGouv, owner } = await loadFixture(deployTokenGouv);
@@ -171,6 +187,55 @@ describe("TokenGouv Contract", function () {
       expect(await tokenGouv.rateIco()).to.equal(1000);
     });
   });
+
+  describe("setTimeLockAddress", function (){
+    it("Should revert for non-owner trying to setTimeLockAddress", async function () {
+      const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
+      await expect(tokenGouv.connect(addr1).setTimeLockAddress(addr1.address))
+        .to.be.revertedWithCustomError(tokenGouv, "OwnableUnauthorizedAccount");
+    });
+
+    it("should revert if the address is the zero address", async function () {
+      const { tokenGouv, owner } = await loadFixture(deployTokenGouv);
+      await expect(tokenGouv.setTimeLockAddress("0x0000000000000000000000000000000000000000"))
+        .to.be.revertedWith("Invalid TimeLock address");
+    });
+    it("should set the TimeLock address", async function () {
+      const { tokenGouv, owner, addr1 } = await loadFixture(deployTokenGouv);
+      await tokenGouv.setTimeLockAddress(addr1.address);
+      expect(await tokenGouv.timeLockAddress()).to.equal(addr1.address);
+    });
+  })
+
+  describe("Token Transfer and Votes Update", function () {
+    it("Should update votes correctly after token transfer", async function () {
+      const { tokenGouv, owner, addr1 } = await loadFixture(deployTokenGouv);
+      await tokenGouv.mint(owner.address, ethers.parseUnits("100", 18));
+      
+      // Transférer des tokens
+      await tokenGouv.transfer(addr1.address, ethers.parseUnits("50", 18));
   
+      // Force la mise à jour des votes
+      await tokenGouv.connect(addr1).delegate(addr1.address);
+  
+      // Vérifier la mise à jour des votes
+      expect(await tokenGouv.getVotes(addr1.address)).to.equal(ethers.parseUnits("50", 18));
+    });  
+  });
+
+  describe("ERC20Permit and Nonces", function () {
+    it("Should correctly return the initial nonce for an owner", async function () {
+      const { tokenGouv, owner } = await loadFixture(deployTokenGouv);
+      expect(await tokenGouv.nonces(owner.address)).to.equal(0);
+    });
+  });
+  
+  describe("check name and symbol", function () {
+    it("Should return the correct name and symbol", async function () {
+      const { tokenGouv, owner } = await loadFixture(deployTokenGouv);
+      expect(await tokenGouv.name()).to.equal("TokenGouv");
+      expect(await tokenGouv.symbol()).to.equal("DCP");
+    });
+  });  
 });
 
