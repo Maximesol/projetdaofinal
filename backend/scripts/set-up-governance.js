@@ -6,21 +6,27 @@ async function setUpGovernance() {
 const [owner, addr1, addr2] = await hre.ethers.getSigners();
 console.log("Setting up  contracts with the account:",owner.address);
 
-  // Charger les adresses déployées
+// Charger les adresses déployées
 const { tokenGouvAddress, timeLockAddress, governorContractAddress } = JSON.parse(fs.readFileSync('deployedAddresses.json', 'utf8'));
 console.log(`TokenGouv Address: ${tokenGouvAddress}`);
 console.log(`TimeLock Address: ${timeLockAddress}`);
 console.log(`GovernorContract Address: ${governorContractAddress}`);
 
 // Transfert de propriété au contrat de la DAO
+const governorContract = await hre.ethers.getContractAt("GovernorContract", governorContractAddress, owner);
+const timeLock = await hre.ethers.getContractAt("TimeLock", timeLockAddress, owner);
 const tokenGouv = await ethers.getContractAt("TokenGouv", tokenGouvAddress, owner);
+
+// set timeLock address in TokenGouv
+const setTimeLoc = await tokenGouv.setTimeLockAddress(timeLockAddress);
+await setTimeLoc.wait();
+console.log("TimeLock address set in TokenGouv:", await tokenGouv.timeLockAddress());
+
+// transfer ownership of TokenGouv to DAO
 await tokenGouv.transferOwnership(governorContractAddress);
 console.log("Ownership of TokenGouv transferred to DAO:", governorContractAddress);
 console.log('owner de TokenGouv:', await tokenGouv.owner());
 
- // Récupérer les instances des contrats
-const timeLock = await hre.ethers.getContractAt("TimeLock", timeLockAddress, owner);
-const governorContract = await hre.ethers.getContractAt("GovernorContract", governorContractAddress, owner);
 
 
 console.log("Setting up roles....")
@@ -33,6 +39,7 @@ await proposerTx.wait();
 console.log(`Proposer role granted to GovernorContract`);
 console.log(`Proposer role status: ${await timeLock.hasRole(proposerRole, governorContract.target)}`);
 
+
 const executorTx = await timeLock.grantRole(executorRole, ADDRESS_ZERO);
 await executorTx.wait();
 console.log(`Executor role granted to ADDRESS_ZERO`);
@@ -40,10 +47,12 @@ console.log(`Executor role status: ${await timeLock.hasRole(executorRole, ADDRES
 
 // revoke deployer's role
 const adminRole = await timeLock.DEFAULT_ADMIN_ROLE();
-const revokeAdminTx = await timeLock.revokeRole(adminRole, owner); // ou l'adresse que tu veux révoquer
+const revokeAdminTx = await timeLock.revokeRole(adminRole, owner);
 await revokeAdminTx.wait();
-console.log(`Admin role revoked from deployer`);
-console.log(`Admin role status for deployer: ${await timeLock.hasRole(adminRole, owner)}`);
+console.log(`Admin role revoked from deployer (signer[0])`);
+console.log(`Admin role status for signer[0]: ${await timeLock.hasRole(adminRole, owner)}`);
+console.log(`Proposer role status for signer[0]: ${await timeLock.hasRole(proposerRole, owner)}`);
+
 
 console.log("Governance setup complete.");
 
