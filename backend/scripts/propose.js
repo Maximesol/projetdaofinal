@@ -1,11 +1,11 @@
 const fs = require('fs');
-const {developmentChains, VOTING_DELAY, proposalsFiles, PROPOSAL_DESCRIPTION} = require('../helper-hardhat-config')
+const {developmentChains, VOTING_DELAY, proposalsFiles, PROPOSAL_DESCRIPTION, PROPOSAL_DESCRIPTION_2} = require('../helper-hardhat-config')
 const {network, ethers} = require('hardhat')
 const {moveBlocks} = require('../utils/move-block')
 
-async function propose(args, functiontoCall, proposalDescription) {
+async function propose(functionToCall, args, proposalDescription) {
 
-    const {governorContractAddress, targetContractAddress } = JSON.parse(fs.readFileSync('deployedAddresses.json', 'utf8'));
+    const {governorContractAddress, targetContractAddress, tokenGouvAddress } = JSON.parse(fs.readFileSync('deployedAddresses.json', 'utf8'));
 
     const [owner, addr1, addr2] = await hre.ethers.getSigners();
 
@@ -13,19 +13,38 @@ async function propose(args, functiontoCall, proposalDescription) {
     
     // Charger les adresses déployées
   const governorContract = await ethers.getContractAt("GovernorContract", governorContractAddress)
-
+  const tokenGouvContract = await ethers.getContractAt("TokenGouv", tokenGouvAddress)
   const targetContract = await ethers.getContractAt("TargetContract", targetContractAddress)
 
-  const encodedFunctionCall = targetContract.interface.encodeFunctionData(functiontoCall, [args]);
-  console.log(`Proposing ${functiontoCall} on ${targetContract.target} with ${args}`)
-  console.log(`Proposal Description:\n  ${proposalDescription}`)
+  const targetAddress = args[0]; // L'adresse de TargetContract
+  const amountInWei = ethers.parseEther(args[1].toString()); // 
+  
+  const encodedFunctionCall = tokenGouvContract.interface.encodeFunctionData(functionToCall, [targetAddress, amountInWei]);
+
+  console.log(`Proposing to transfer ${amountToTransfer.toString()} ETH to ${targetContractAddress} with ${args}`);
+  console.log(`Proposal Description:\n  ${PROPOSAL_DESCRIPTION_2}`);
 
   const proposeTx = await governorContract.propose(
-    [targetContract.target],
-    [0],
-    [encodedFunctionCall],
-    proposalDescription
-  )
+      [tokenGouvAddress],
+      [0],
+      [encodedFunctionCall],
+      PROPOSAL_DESCRIPTION_2
+    );
+
+
+  // Proposer une proposition pour store 77
+  // const encodedFunctionCall = targetContract.interface.encodeFunctionData(functiontoCall, [args]);
+  // console.log(`Proposing ${functiontoCall} on ${targetContract.target} with ${args}`)
+  // console.log(`Proposal Description:\n  ${proposalDescription}`)
+
+  // const proposeTx = await governorContract.propose(
+  //   [targetContract.target],
+  //   [0],
+  //   [encodedFunctionCall],
+  //   proposalDescription
+  // )
+
+  // fin de la proposition du dessus |^^^^^^^^^^|
   
   // If working on a development chain, we will push forward till we get to the voting period.
   if (developmentChains.includes(network.name)) {
@@ -73,8 +92,10 @@ function storeProposalId(proposalId) {
     proposals[chainId].push(proposalId.toString());
     fs.writeFileSync(proposalsFiles, JSON.stringify(proposals), "utf8");
   }
+  const targetContractAddress = "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d"; // Adresse de TargetContract
+  const amountToTransfer = "10"; // Montant en ETH
 
-propose(77, "store", PROPOSAL_DESCRIPTION)
+propose("transferEth", [targetContractAddress, amountToTransfer], PROPOSAL_DESCRIPTION_2)
     .then(() => process.exit(0))
     .catch((error) => {
         console.error(error);
