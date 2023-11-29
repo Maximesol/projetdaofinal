@@ -38,10 +38,6 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     emit Whitelisted(investor);
 }
 
-    function removeFromWhitelist(address investor) public onlyOwner {
-        whitelist[investor] = false;
-    }
-
     function isWhitelisted(address investor) public view returns (bool) {
         return whitelist[investor];
     }
