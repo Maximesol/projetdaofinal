@@ -9,6 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
 contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
 
     event Whitelisted(address investor);
+    address public timeLockAddress;
 
 
     uint256 public constant s_maxSupply = 1000000 * 10**18;
@@ -18,11 +19,18 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     //uint256 public icoEndTime;
     mapping(address => bool) private whitelist;
 
+    // modifier qui accepte uniquement les appels de l'addresse de verouillage TimeLock
+    modifier onlyTimeLock() {
+        require(msg.sender == timeLockAddress, "Caller is not TimeLock");
+        _;
+    }
+
     constructor(address initialOwner)
         ERC20("TokenGouv", "DCP")
         Ownable(initialOwner)
         ERC20Permit("TokenGouv")
     {}
+
 
     function addToWhitelist(address investor) public onlyOwner {
     require(!whitelist[investor], "Investor already whitelisted");
@@ -53,6 +61,10 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
         _mint(to, amount);
     }
+    function transferEth(address payable _to, uint256 _amount) public onlyTimeLock {
+    require(address(this).balance >= _amount, "Insufficient balance");
+    _to.transfer(_amount);
+}
 
     receive() external payable {
         // Logique pour la gestion des Ethers reçus, par exemple transfert à une adresse de trésorerie
@@ -78,5 +90,9 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
 
     function setIcoRate(uint256 newRate) public onlyOwner {
         rateIco = newRate;
+    }
+    function setTimeLockAddress(address _newTimeLockAddress) public onlyOwner {
+        require(_newTimeLockAddress != address(0), "Invalid TimeLock address");
+        timeLockAddress = _newTimeLockAddress;
     }
 }
