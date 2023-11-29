@@ -21,4 +21,10 @@ contract TargetContract is Ownable {
   function retrieve() public view returns (uint256) {
     return value;
   }
+
+  // Function to receive ETH
+    receive() external payable {}
+
+    // Fallback function
+    fallback() external payable {}
 }
