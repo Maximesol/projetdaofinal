@@ -91,6 +91,35 @@ describe("TokenGouv Contract", function () {
 
   });
 
+  describe("buyTokensAfterIco", function () {
+      
+      it("Should revert if the value sent is not enough", async function () {
+        const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
+        await expect(tokenGouv.connect(addr1).buyTokensAfterIco({ value: ethers.parseEther("0") }))
+          .to.be.revertedWith("Invalid ETH amount");
+      });
+  
+      it("Should revert if the maxSupply is reached", async function () {
+        const { tokenGouv, owner, addr1 } = await loadFixture(deployTokenGouv);
+      
+        // Définir une valeur proche de la maxSupply pour le mint
+        const almostMaxSupply = "999999" + "0".repeat(18); // 999999 tokens en unités entières
+        await tokenGouv.mint(owner.address, almostMaxSupply);
+      
+        // Essayer d'acheter suffisamment de tokens pour dépasser maxSupply
+        const purchaseAmount = ethers.parseEther("2"); // 2 ETH
+        await expect(tokenGouv.connect(addr1).buyTokensAfterIco({ value: purchaseAmount }))
+          .to.be.revertedWith("Exceeds max supply");
+      });
+  
+      it("Should allow anyone to buy tokens after ICO", async function () {
+        const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
+        await tokenGouv.connect(addr1).buyTokensAfterIco({ value: ethers.parseEther("1") });
+        expect(await tokenGouv.balanceOf(addr1.address)).to.be.above(0);
+      });
+  
+  });
+
   describe("Mint", function () {
 
     it("Should revert for non-owner trying to mint", async function () {
@@ -173,18 +202,18 @@ describe("TokenGouv Contract", function () {
     });
   });
   
-  describe("setIcoRate", function () {
-    it("Should revert for non-owner trying to setIcoRate", async function () {
+  describe("setRate", function () {
+    it("Should revert for non-owner trying to setRate", async function () {
       const { tokenGouv, addr1 } = await loadFixture(deployTokenGouv);
-      await expect(tokenGouv.connect(addr1).setIcoRate(1))
+      await expect(tokenGouv.connect(addr1).setRate(1))
         .to.be.revertedWithCustomError(tokenGouv, "OwnableUnauthorizedAccount");
     });
 
-    it("Should set the icoRate", async function () {
+    it("Should set the Rate", async function () {
       const { tokenGouv, owner } = await loadFixture(deployTokenGouv);
-      expect(await tokenGouv.rateIco()).to.equal(5000);
-      await tokenGouv.setIcoRate(1000);
-      expect(await tokenGouv.rateIco()).to.equal(1000);
+      expect(await tokenGouv.rate()).to.equal(5000);
+      await tokenGouv.setRate(1000);
+      expect(await tokenGouv.rate()).to.equal(1000);
     });
   });
 

@@ -14,7 +14,7 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
 
     uint256 public constant s_maxSupply = 1000000 * 10**18;
     uint256 public constant s_maxETHContributionIco = 10 ether;
-    uint256 public rateIco = 5000;
+    uint256 public rate = 5000; // 1 ETH = 5000 TokenGouv (ICO), after we can change it
     //uint256 public icoStartTime;
     //uint256 public icoEndTime;
     mapping(address => bool) private whitelist;
@@ -42,15 +42,27 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         return whitelist[investor];
     }
 
+    // buyTokens during ICO
     function buyTokens() public payable {
         //require(block.timestamp >= icoStartTime && block.timestamp <= icoEndTime, "ICO not active");
         require(isWhitelisted(msg.sender), "Address not whitelisted");
         require(msg.value > 0 && msg.value <= s_maxETHContributionIco, "Invalid ETH amount");
-        uint256 tokenAmount = msg.value * rateIco;
+        uint256 tokenAmount = msg.value * rate;
         uint256 newTotalSupply = totalSupply() + tokenAmount;
         require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
         _mint(msg.sender, tokenAmount);
     }
+
+    // buyTokens after ICO
+    function buyTokensAfterIco() public payable {
+        //require(block.timestamp >= icoEndTime, "ICO still active");
+        require(msg.value > 0, "Invalid ETH amount");
+        uint256 tokenAmount = msg.value * rate;
+        uint256 newTotalSupply = totalSupply() + tokenAmount;
+        require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
+        _mint(msg.sender, tokenAmount);
+    }
+
 
     function mint(address to, uint256 amount) public onlyOwner {
         uint256 newTotalSupply = totalSupply() + amount;
@@ -84,8 +96,8 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         return super.nonces(owner);
     }
 
-    function setIcoRate(uint256 newRate) public onlyOwner {
-        rateIco = newRate;
+    function setRate(uint256 newRate) public onlyOwner {
+        rate = newRate;
     }
     function setTimeLockAddress(address _newTimeLockAddress) public onlyOwner {
         require(_newTimeLockAddress != address(0), "Invalid TimeLock address");
