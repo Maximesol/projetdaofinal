@@ -1,7 +1,7 @@
 "use client";
 import { ChakraProvider } from "@chakra-ui/react";
 import "@rainbow-me/rainbowkit/styles.css";
-import { getDefaultWallets, RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { getDefaultWallets, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { sepolia, hardhat } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
@@ -35,7 +35,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <WagmiConfig config={wagmiConfig}>
-          <RainbowKitProvider chains={chains}>
+          <RainbowKitProvider 
+          chains={chains}
+          theme={darkTheme()}>
               <ChakraProvider>{children}</ChakraProvider>
           </RainbowKitProvider>
         </WagmiConfig>
