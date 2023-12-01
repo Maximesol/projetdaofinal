@@ -6,7 +6,7 @@ import MainFooter from './MainFooter';
 
 export default function Main() {
   return (
-    <Flex direction="column" minHeight="100vh">
+    <Flex direction="column" minHeight="100vh" bg='gray.700' color="white">
       <Nav />
       <Flex flexGrow={1}>
         <MainContent />

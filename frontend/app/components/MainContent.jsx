@@ -1,5 +1,5 @@
 import React from 'react';
-import { Flex, Button, Stack, Spacer } from '@chakra-ui/react';
+import { Flex, Button, Stack, Spacer, Divider } from '@chakra-ui/react';
 import MainCards from './MainCards';
 
 
@@ -12,6 +12,7 @@ export default function MainContent() {
         <MainCards title="DAO Info" />
       </Stack>
       <Spacer />
+      <Divider my={4} color="grey" />
       <Button colorScheme="blue" my={4}>Get Funds</Button>
     </Flex>
 

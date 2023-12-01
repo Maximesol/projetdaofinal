@@ -4,7 +4,7 @@ import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Navigation() {
   return (
-    <Flex as="nav" bg="gray.100" p="4" align="center" width="100vw" height="80px">
+    <Flex as="nav" bg="gray.800" p="4" align="center" width="100vw" height="80px">
       <Box fontWeight="bold" fontSize="lg">
         DeFi Capital Partner
       </Box>
