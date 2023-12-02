@@ -1666,4 +1666,4 @@ export const abiGovernorContract =
       "type": "receive"
     }
   ];
-export const contractAddressGovernorContract = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+export const contractAddressGovernorContract = "0x9A676e781A523b5d0C0e43731313A708CB607508";

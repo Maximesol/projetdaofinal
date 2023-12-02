@@ -127,4 +127,4 @@ export const abiTargetContract =
       "type": "receive"
     }
   ];
-export const contractAddressTargetContract = "0x610178dA211FEF7D417bC0e6FeD39F05609AD788";
+export const contractAddressTargetContract = "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d";
