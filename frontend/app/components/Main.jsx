@@ -9,7 +9,7 @@ import  useGovernorContract  from '../hooks/useGovernorContract';
 import ContractContext from "../context/ContractContext";
 
 export default function Main() {
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
 
   const {
     numberOfProposals,
@@ -20,6 +20,7 @@ export default function Main() {
     numberOfProposals,
     getProposalCount,
     isConnected,
+    address,
   };
 
 
