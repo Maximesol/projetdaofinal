@@ -8,7 +8,14 @@ import { useAccount } from "wagmi";
 import { useState } from 'react';
 import { abiTokenGouv, contractAddressTokenGouv} from "../constants/constantTokenGouv"
 import { useEffect } from 'react';
-import { getWalletClient, readContract } from '@wagmi/core';
+import {
+  readContract,
+  prepareWriteContract,
+  writeContract,
+  getWalletClient,
+  waitForTransaction,
+} from "@wagmi/core";
+import { useToast } from '@chakra-ui/react';
 
 
 
@@ -21,6 +28,31 @@ export default function YourInfoContent() {
   const [showDelegateForm, setShowDelegateForm] = useState(false);
   const [delegateOption, setDelegateOption] = useState('self');
   const [delegateAddress, setDelegateAddress] = useState('');
+  const [delegateStatus, setDelegateStatus] = useState(false);
+
+  
+  // ::::::::::: TOAST :::::::::::::::::::::
+  const toast = useToast();
+
+  const showSuccessToast = () => {
+    toast({
+      title: 'Délégation réussie',
+      description: "Les tokens ont été délégués avec succès.",
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
+  };
+
+  const showErrorToast = (error) => {
+  toast({
+    title: 'Erreur de délégation',
+    description: `Un problème est survenu lors de la délagation`,
+    status: 'error',
+    duration: 5000,
+    isClosable: true,
+  });
+}
   
 
 
@@ -42,14 +74,6 @@ export default function YourInfoContent() {
     }
   };
 
-  useEffect(() => {
-    if (isConnected) {
-      getBalanceOf(address);
-    }
-  }, [isConnected, address]);
-
-
-
   // appeler la fonction pour voir le pouvoir de vote
 
   const getVotesOfAddressConnected = async (address) => {
@@ -62,28 +86,81 @@ export default function YourInfoContent() {
         args: [address],
         account: walletClient.account,
       });
-      setVotingPower(data);
+      //setVotingPower(data);
+      if (data !== "0x") {
+        setVotingPower(data);
+      } else {
+        console.log("Pas encore de votes délégués pour cette adresse");
+        setVotingPower(0);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération de la proposal:", error);
-      throw error;
     }
   };
 
   useEffect(() => {
-    if (isConnected) {
-      getVotesOfAddressConnected(address);
-    }
-  }, [isConnected, address]);
+  if (isConnected && address) {
+    getBalanceOf(address);
+    getVotesOfAddressConnected(address);
+  }
+}, [isConnected, address, delegateStatus]);
 
 
+  // appeler la fonction pour se déléguer ses tokens
+  const selfDelegate = async () => {
+  console.log("Délégation à soi-même");
+  const walletClient = await getWalletClient();
+  try {
+    const { request } = await prepareWriteContract({
+      address: contractAddressTokenGouv,
+      abi: abiTokenGouv,
+      functionName: "delegate",
+      args: [address], // Adresse de l'utilisateur connecté
+      account: walletClient.account,
+    });
+    const { hash } = await writeContract(request);
+    await waitForTransaction({ hash });
+    setDelegateStatus(!delegateStatus);
+    showSuccessToast();
+  } catch (error) {
+    showErrorToast()
+    console.error("Erreur lors de la délégation à soi-même:", error);
+  }
+};
 
-  const handleDelegateSubmit = () => {
-    if (delegateOption === 'self') {
-      // Logique pour se déléguer à soi-même
-    } else {
-      // Logique pour déléguer à l'adresse spécifiée
-    }
-  };
+
+  // appeler la fonction pour déléguer ses tokens à une autre adresse
+
+  const delegateToAddress = async (delegateAddress) => {
+  console.log("Délégation à l'adresse:", delegateAddress);
+  const walletClient = await getWalletClient();
+  try {
+    const { request } = await prepareWriteContract({
+      address: contractAddressTokenGouv,
+      abi: abiTokenGouv,
+      functionName: "delegate",
+      args: [delegateAddress],
+      account: walletClient.account,
+    });
+    const { hash } = await writeContract(request);
+    await waitForTransaction({ hash });
+    setDelegateStatus(!delegateStatus);
+    setDelegateAddress(''); 
+    showSuccessToast();
+  } catch (error) {
+    console.error("Erreur lors de la délégation à une autre adresse:", error);
+    showErrorToast()
+
+  }
+};
+
+  const handleDelegateSubmit = async () => {
+  if (delegateOption === 'self') {
+    await selfDelegate();
+  } else {
+    await delegateToAddress(delegateAddress);
+  }
+};
 
 
 
