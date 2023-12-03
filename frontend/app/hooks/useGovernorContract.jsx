@@ -17,6 +17,7 @@ const useGovernorContract = () => {
   const [isLoading, setIsLoading] = useState(true); 
   const { isConnected } = useAccount();
 
+
   const getNumberOfProposals = async () => {
     const walletClient = await getWalletClient();
     setIsLoading(true); // Début du chargement
@@ -27,7 +28,12 @@ const useGovernorContract = () => {
         abi: abiGovernorContract,
         functionName: "getNumberOfProposals",
       });
-      setNumberOfProposals(result);
+      if (result !== "0x") {
+        setNumberOfProposals(result);
+      } else {
+        console.log("Le contrat n'est pas encore déployé ou la fonction getNumberOfProposals n'existe pas");
+        setNumberOfProposals(0);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération du nombre de propositions:", error);
     } finally {
