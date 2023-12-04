@@ -1,6 +1,6 @@
 'use client'
 import React from 'react';
-import { Flex, Box } from '@chakra-ui/react';
+import { Flex } from '@chakra-ui/react';
 import Nav from './Nav';
 import MainContent from './MainContent';
 import MainFooter from './MainFooter';

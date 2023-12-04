@@ -9,9 +9,13 @@ export default function ProposalContent() {
   const { isConnected } = useAccount();
   const [isLoaded, setIsLoaded] = useState(false);
 
+  console.log(numberOfProposals)
+
   useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+    if (numberOfProposals !== null) {
+      setIsLoaded(true);
+    }
+  }, [numberOfProposals]);
 
   if (!isLoaded) {
     return <Box>Chargement...</Box>;

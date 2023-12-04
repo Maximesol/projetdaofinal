@@ -1,3 +1,4 @@
+'use client'
 import React, { createContext, useState, useEffect } from 'react';
 import { useContractEvent, useAccount } from "wagmi";
 
@@ -15,8 +16,7 @@ export const GovernorContractProvider = ({ children }) => {
   const { isConnected } = useAccount();
   const [isLoading, setIsLoading] = useState(false); 
 
-  const getNumberOfProposals = async () => {
-    if (!isConnected) return;
+  const getNumberOfProposals = async () => { 
     const walletClient = await getWalletClient();
     setIsLoading(true); // Début du chargement
     try {
@@ -35,9 +35,10 @@ export const GovernorContractProvider = ({ children }) => {
     } catch (error) {
       console.error("Erreur lors de la récupération du nombre de propositions:", error);
     } finally {
-      setIsLoading(false); // Fin du chargement
+      setIsLoading(false);
     }
   };
+
 
   useContractEvent({
     address: contractAddressGovernorContract, 
@@ -52,7 +53,6 @@ export const GovernorContractProvider = ({ children }) => {
     },
   });
 
-
   useEffect(() => {
     if (isConnected) {
       getNumberOfProposals();
@@ -63,7 +63,6 @@ export const GovernorContractProvider = ({ children }) => {
     numberOfProposals,
     isLoading,
     getNumberOfProposals,
-
 
   };
 
