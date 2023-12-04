@@ -17,8 +17,10 @@ async function main() {
     const proposalBeforeVote = await governor.state(proposalId);
     console.log(`Proposal state before voting: ${proposalBeforeVote}`);
     const currentBlock = await ethers.provider.getBlockNumber();
+    console.log(`Current Block Number before voting: ${currentBlock}`)
     const quorumNeeded = await governor.quorum(currentBlock - 1);
     console.log(`Quorum needed: ${quorumNeeded}`);
+
 
     console.log(`Signer[0] (${signers[0].address}) is now voting...`);
     await vote(proposalId, voteWay, reason, governor);

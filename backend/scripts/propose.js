@@ -23,42 +23,32 @@ async function propose(functionToCall, args, proposalDescription) {
 
   console.log(`Proposing to transfer ${amountToTransfer.toString()} ETH to ${targetContractAddress} with ${args}`);
   console.log(`Proposal Description:\n  ${PROPOSAL_DESCRIPTION_2}`);
+  
+  const currentBlockBefore = await ethers.provider.getBlockNumber()
+  console.log(`Current Block Number before the propose function moving block: ${currentBlockBefore}`)
 
   const proposeTx = await governorContract.propose(
       [tokenGouvAddress],
       [0],
       [encodedFunctionCall],
       PROPOSAL_DESCRIPTION_2
-    );
+      );
+    const proposeReceipt = await proposeTx.wait(1)
+    const proposalId = proposeReceipt.logs[0].args[0].toString();
+    console.log(`Proposal ID: ${proposalId}`);
 
-
-  // Proposer une proposition pour store 77
-  // const encodedFunctionCall = targetContract.interface.encodeFunctionData(functiontoCall, [args]);
-  // console.log(`Proposing ${functiontoCall} on ${targetContract.target} with ${args}`)
-  // console.log(`Proposal Description:\n  ${proposalDescription}`)
-
-  // const proposeTx = await governorContract.propose(
-  //   [targetContract.target],
-  //   [0],
-  //   [encodedFunctionCall],
-  //   proposalDescription
-  // )
-
-  // fin de la proposition du dessus |^^^^^^^^^^|
-  
-  // If working on a development chain, we will push forward till we get to the voting period.
   if (developmentChains.includes(network.name)) {
       await moveBlocks(VOTING_DELAY + 1)
     }
     
-    const proposeReceipt = await proposeTx.wait(1)
 
-    const proposalId = proposeReceipt.logs[0].args[0].toString();
-    console.log(`Proposal ID: ${proposalId}`);
 
     const proposalState = await governorContract.state(proposalId)
     const proposalSnapShot = await governorContract.proposalSnapshot(proposalId)
+
     const proposalDeadline = await governorContract.proposalDeadline(proposalId)
+    // recupérer le quorum
+    const quorumRequired = await governorContract.quorum(proposalSnapShot)
 
     // save the proposalId
     storeProposalId(proposalId);
@@ -66,10 +56,19 @@ async function propose(functionToCall, args, proposalDescription) {
     // the Proposal State is an enum data type, defined in the IGovernor contract.
     // 0:Pending, 1:Active, 2:Canceled, 3:Defeated, 4:Succeeded, 5:Queued, 6:Expired, 7:Executed
     console.log(`Current Proposal State: ${proposalState}`)
+
+
+    //check current block number
+    const currentBlock = await ethers.provider.getBlockNumber()
+    console.log(`Current Block Number after moving block: ${currentBlock}`)
+
+
     // What block # the proposal was snapshot
     console.log(`Current Proposal Snapshot: ${proposalSnapShot}`)
     // The block number the proposal voting expires
     console.log(`Current Proposal Deadline: ${proposalDeadline}`)
+    // The quorum required for the proposal to pass
+    console.log(`Current Proposal Quorum: ${quorumRequired}`)
 
     // check le nombre de proposition
     const proposalCount = await governorContract.getNumberOfProposals()
