@@ -57,8 +57,8 @@ export default function YourInfoContent() {
 
 
   // appeler la fonction balanceOf the ERC20 contract
-  const getBalanceOf = async (address) => {
-    const walletClient = await getWalletClient();
+  const getBalanceOf = async (address, walletClient) => {
+
     try {
       const data = await readContract({
         address: contractAddressTokenGouv,
@@ -76,8 +76,8 @@ export default function YourInfoContent() {
 
   // appeler la fonction pour voir le pouvoir de vote
 
-  const getVotesOfAddressConnected = async (address) => {
-    const walletClient = await getWalletClient();
+  const getVotesOfAddressConnected = async (address, walletClient) => {
+  
     try {
       const data = await readContract({
         address: contractAddressTokenGouv,
@@ -99,11 +99,24 @@ export default function YourInfoContent() {
   };
 
   useEffect(() => {
-  if (isConnected && address) {
-    getBalanceOf(address);
-    getVotesOfAddressConnected(address);
-  }
-}, [isConnected, address, delegateStatus]);
+    const init = async () => {
+      if (!isConnected || !address) return;
+
+      try {
+        const walletClient = await getWalletClient();
+        if (!walletClient) {
+          console.error("walletClient n'est pas initialisé");
+          return;
+        }
+        await getBalanceOf(address, walletClient);
+        await getVotesOfAddressConnected(address, walletClient);
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation :", error);
+      }
+    };
+
+    init();
+  }, [isConnected, address, delegateStatus]);
 
 
   // appeler la fonction pour se déléguer ses tokens
@@ -171,9 +184,9 @@ export default function YourInfoContent() {
 
 
   return (
-    <Box boxShadow="md" p="4" borderRadius="md">
+    <Box as="div" boxShadow="md" p="4" borderRadius="md">
       {isConnected ? (
-        <Flex direction="column" gap="4">
+        <Flex as="div" direction="column" gap="4">
           <Text>Adresse connectée : {formatAddress(address)}</Text>
           <Text>Balance DCP token: {balance.toString() / 1e18}</Text>
           <Text>Pouvoir de vote: {votingPower.toString() / 1e18 }</Text>

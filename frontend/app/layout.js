@@ -6,6 +6,7 @@ import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { sepolia, hardhat } from "wagmi/chains";
 import { publicProvider } from "wagmi/providers/public";
 import { alchemyProvider } from 'wagmi/providers/alchemy'
+import { GovernorContractProvider } from "./context/GovernorContractProvider";
 
 const ALCHEMY_KEY = process.env.NEXT_PUBLIC_ALCHEMY_KEY
 
@@ -32,13 +33,17 @@ const wagmiConfig = createConfig({
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning={true}>
       <body>
         <WagmiConfig config={wagmiConfig}>
           <RainbowKitProvider 
-          chains={chains}
-          theme={darkTheme()}>
-              <ChakraProvider>{children}</ChakraProvider>
+            chains={chains}
+            theme={darkTheme()}>
+            <GovernorContractProvider>
+              <ChakraProvider>
+                {children}
+              </ChakraProvider>
+            </GovernorContractProvider>
           </RainbowKitProvider>
         </WagmiConfig>
       </body>
