@@ -9,8 +9,6 @@ export default function ProposalContent() {
   const { isConnected } = useAccount();
   const [isLoaded, setIsLoaded] = useState(false);
 
-  console.log(numberOfProposals)
-
   useEffect(() => {
     if (numberOfProposals !== null) {
       setIsLoaded(true);
