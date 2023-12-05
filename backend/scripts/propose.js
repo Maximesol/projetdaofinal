@@ -20,6 +20,7 @@ async function propose(functionToCall, args, proposalDescription) {
   const amountInWei = ethers.parseEther(args[1].toString()); // 
   
   const encodedFunctionCall = tokenGouvContract.interface.encodeFunctionData(functionToCall, [targetAddress, amountInWei]);
+  console.log(`Encoded Function Call: ${encodedFunctionCall}`)
 
   console.log(`Proposing to transfer ${amountToTransfer.toString()} ETH to ${targetContractAddress} with ${args}`);
   console.log(`Proposal Description:\n  ${PROPOSAL_DESCRIPTION_2}`);

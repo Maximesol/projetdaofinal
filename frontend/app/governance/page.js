@@ -5,6 +5,7 @@ import Nav from '../components/Nav';
 import Proposals from '../components/Proposals';
 import UserInfo from '../components/UserInfo';
 import CreateProposalModal from '../components/CreateProposalModal';
+import ProposalForm from '../components/ProposalForm'
 
 export default function Governance() {
   const { isOpen, onOpen, onClose } = useDisclosure();
@@ -21,7 +22,9 @@ export default function Governance() {
           <Button colorScheme="blue" my={4} onClick={onOpen}>
             Make a Proposal
           </Button>
-          <CreateProposalModal isOpen={isOpen} onClose={onClose} />
+          <CreateProposalModal isOpen={isOpen} onClose={onClose}>
+            <ProposalForm  isOpen={isOpen} onClose={onClose}/>
+          </CreateProposalModal>
         </Box>
       </Flex>
     </Flex>

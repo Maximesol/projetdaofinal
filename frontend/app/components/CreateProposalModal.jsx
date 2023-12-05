@@ -1,7 +1,12 @@
-import React from 'react'
+import React from 'react';
 
-export default function CreateProposalModal() {
+export default function CreateProposalModal({ isOpen, onClose, children }) {
+  if (!isOpen) return null;
+
   return (
-    <div>CreateProposalModal</div>
-  )
+    <div>
+      <button onClick={onClose}>Close</button>
+      {children}
+    </div>
+  );
 }
