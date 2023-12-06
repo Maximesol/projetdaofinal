@@ -3,8 +3,13 @@ import { Box, Badge, Button, Progress, Text, VStack, HStack, useToast, Collapse 
 import { ContractContext } from '../context/GovernorContractProvider';
 import { readContract, getWalletClient } from "@wagmi/core";
 import { abiGovernorContract, contractAddressGovernorContract } from '../constants/constantGovernorContract'
+import { abiTokenGouv, contractAddressTokenGouv } from '../constants/constantTokenGouv'
+import { abiTargetContract, contractAddressTargetContract } from '../constants/constantTargetContract'
+import { encodeFunctionData, stringToBytes, keccak256, stringToHex} from 'viem'
+import { prepareWriteContract, writeContract, waitForTransaction } from "@wagmi/core";
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useAccount, useContractEvent } from "wagmi";
+
 
 
 
@@ -23,7 +28,6 @@ const getProposalStateDetails = (state) => {
 };
 
 const ProposalDetails = ({ proposalId }) => {         
-  const toast = useToast();
   const { getState, voteFor, voteAgainst, voteAbstain, accountHasVoted, hasVoted } = useContext(ContractContext);
   const [state, setState] = useState(null);
   const {address} = useAccount();
@@ -33,9 +37,83 @@ const ProposalDetails = ({ proposalId }) => {
   const [forPercentage, setForPercentage] = useState(0);
   const [againstPercentage, setAgainstPercentage] = useState(0);
   const [abstainPercentage, setAbstainPercentage] = useState(0);
-
+  
   const [showDetails, setShowDetails] = useState(false);
   const toggleShowDetails = () => setShowDetails(!showDetails);
+  
+  // ::: TOAST :::::::::::::::::::::
+  const toast = useToast();
+  const showSuccessToast = () => {
+    toast({
+      title: 'Proposition mise en queue réussie',
+      description: "La proposition a bien été soumise au à la file d'attente du TimeLock.",
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
+  };
+
+  const showErrorToast = (error) => {
+  toast({
+    title: 'Erreur de mise en queue',
+    description: `La proposition n'a pas pu être mise en queue. Erreur: ${error}`,
+    status: 'error',
+    duration: 5000,
+    isClosable: true,
+  });
+}
+
+
+  const amountInEther = "10";
+  const amountInWei = (parseFloat(amountInEther) * 1e18).toString();
+  
+  
+  const functionToCall = 'transferEth';
+  const args = [contractAddressTargetContract, amountInWei];
+  const contractAbi = abiTokenGouv;
+  const description = stringToBytes("Transfert 10 eth from token gouv contrat to Target Contract!");
+
+  
+
+  const descriptionHash = keccak256(description);
+  console.log("descriptionHash : ", descriptionHash)
+  
+  
+  
+
+    const encodedData = encodeFunctionData({
+      abi: contractAbi,
+      functionName: functionToCall,
+      args: args,
+    });
+
+    console.log(encodedData); 
+ 
+
+  const targets = [contractAddressTokenGouv];
+  const values = [0];
+  const calldatas = [encodedData];
+
+  // function queue 
+  
+  const addInQueue = async (targets, values, calldatas, description) => {
+    const walletClient = await getWalletClient();
+    try {
+      const { request } = await prepareWriteContract({
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: "queue",
+        args: [targets, values, calldatas, description],
+        account: walletClient.account,
+      });
+      const { hash } = await writeContract(request);
+      await waitForTransaction({ hash });
+      showSuccessToast();
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la proposal:", error);
+      showErrorToast();
+    }
+  };
 
   const proposalVotes = async (proposalId) => {
     const walletClient = await getWalletClient();
@@ -88,7 +166,6 @@ const ProposalDetails = ({ proposalId }) => {
   }, [proposalId, address, getState, accountHasVoted, hasVoted]);
 
   useEffect(() => {
-    console.log(`Mise à jour des pourcentages - For: ${dataVoteFor}, Against: ${dataVoteAgainst}, Abstain: ${dataVoteAbstain}`);
     const totalVotes = dataVoteFor + dataVoteAgainst + dataVoteAbstain;
     const newForPercentage = totalVotes ? (dataVoteFor / totalVotes) * 100 : 0;
     const newAgainstPercentage = totalVotes ? (dataVoteAgainst / totalVotes) * 100 : 0;
@@ -183,6 +260,27 @@ const ProposalDetails = ({ proposalId }) => {
       <Button size="sm" colorScheme="red" onClick={() => voteAgainst(proposalId, address)} isDisabled={hasVoted}>Against</Button>
       <Button size="sm" colorScheme="gray" onClick={() => voteAbstain(proposalId, address)} isDisabled={hasVoted}>Abstain</Button>
     </HStack>
+    <Button
+      mt={2}
+      size="sm"
+      colorScheme="blue"
+      onClick={() => addInQueue(
+      targets,
+      values,
+      calldatas,
+      description)}
+      isDisabled={state?.name !== "Succeeded"}
+    >
+      Queue
+    </Button>
+    <Button
+      mt={2}
+      size="sm"
+      colorScheme="orange"
+      isDisabled={state?.name !== "ExecutableState"}
+    >
+      Execute
+    </Button>
     <Button mt={2} size="sm" colorScheme="blue" onClick={toggleShowDetails}>
       {showDetails ? 'Hide Details' : 'Show More'}
     </Button>

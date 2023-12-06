@@ -16,6 +16,7 @@ export const GovernorContractProvider = ({ children }) => {
   const [combinedProposals, setCombinedProposals] = useState([]);
   const viemPublicClient = usePublicClient();
   const [hasVoted, setHasVoted] = useState(false);
+  const [queueEvents, setQueueEvents] = useState([]);
 
 
 
@@ -222,11 +223,35 @@ export const GovernorContractProvider = ({ children }) => {
     },
   });
 
+  // listen to the event ProposalQueued(uint256 proposalId, uint256 etaSeconds);
+  useContractEvent({
+    address: contractAddressGovernorContract,
+    abi: abiGovernorContract,
+    eventName: "ProposalQueued",
+    listener: (events) => {
+      const newEvents = events.map(event => ({
+        proposalId: event.args.proposalId.toString(),
+        etaSeconds: event.args.etaSeconds.toString(),
+
+      }));
+      setQueueEvents(prevEvents => [...prevEvents, ...newEvents]);
+    },
+  });
+  console.log(queueEvents);
+
+
+
+
+
+
+
+
+
   useEffect(() => {
     if (isConnected) {
       getNumberOfProposals();
     }
-  }, [isConnected]);
+  }, [isConnected, queueEvents]);
 
   const contextValue = {
     numberOfProposals,

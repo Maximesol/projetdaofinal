@@ -21,6 +21,7 @@ const queueAndExecute =  async() => {
 
 
   const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes(PROPOSAL_DESCRIPTION_2))
+  console.log(`Description hash: ${descriptionHash}`)
 
   // could also use ethers.utils.id(PROPOSAL_DESCRIPTION)
 
