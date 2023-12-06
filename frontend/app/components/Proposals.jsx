@@ -7,7 +7,6 @@ import { ContractContext } from '../context/GovernorContractProvider';
 const Proposals = () => {
   const { combinedProposals } = useContext(ContractContext);  
 
-  console.log("combinedProposals : ", combinedProposals);
 
   return (
     <div>
