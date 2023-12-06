@@ -2,19 +2,127 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { useContractEvent, useAccount, usePublicClient } from "wagmi";
 import { parseAbiItem } from "viem";
-import { readContract, getWalletClient, waitForTransaction } from "@wagmi/core";
+import { readContract, getWalletClient, waitForTransaction, prepareWriteContract, writeContract } from "@wagmi/core";
 import { abiGovernorContract, contractAddressGovernorContract } from "../constants/constantGovernorContract"
 
 export const ContractContext = createContext();
 
 export const GovernorContractProvider = ({ children }) => {
   const [numberOfProposals, setNumberOfProposals] = useState(0);
-  const { isConnected } = useAccount();
+  const { isConnected, address} = useAccount();
   const [isLoading, setIsLoading] = useState(false); 
   const [proposalEvents, setProposalEvents] = useState([]);
   const [pastProposals, setPastProposals] = useState([]);
   const [combinedProposals, setCombinedProposals] = useState([]);
   const viemPublicClient = usePublicClient();
+  const [hasVoted, setHasVoted] = useState(false);
+
+
+
+  // function proposalVote
+  const proposalVotes = async (proposalId) => {
+    const walletClient = await getWalletClient();
+    try {
+      const data = await readContract({
+        client: walletClient,
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: 'proposalVotes',
+        args: [proposalId],
+      })
+      console.log("proposal vote : ", data)
+      setVotesFor(data.forVotes);
+      setVotesAgainst(data.againstVotes);
+      setVotesAbstain(data.abstainVotes);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    }
+  };
+
+
+
+  // function has Voted 
+  const accountHasVoted = async (proposalId, address) => {
+    const walletClient = await getWalletClient();
+    try {
+      const data = await readContract({
+        client: walletClient,
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: 'hasVoted',
+        args: [proposalId, address],
+      })
+      console.log("has voted : ", data)
+      setHasVoted(data);
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    }
+  };
+
+
+  // function voteFor
+  const voteFor = async (proposalId, address) => {
+    const support = 1;
+    const walletClient = await getWalletClient();
+    try{
+    const { request } = await prepareWriteContract({
+      address: contractAddressGovernorContract,
+      abi: abiGovernorContract,
+      functionName: 'castVote',
+      args: [proposalId, support],
+      account: walletClient.account,
+    });
+    const { hash } = await writeContract(request);
+    await waitForTransaction({ hash });
+    accountHasVoted(proposalId, address)
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    
+  };
+};
+
+
+  // function voteAgainst
+  const voteAgainst = async (proposalId, address) => {
+    const support = 0;
+    const walletClient = await getWalletClient();
+    try{
+    const { request } = await prepareWriteContract({
+      address: contractAddressGovernorContract,
+      abi: abiGovernorContract,
+      functionName: 'castVote',
+      args: [proposalId, support],
+      account: walletClient.account,
+    });
+    const { hash } = await writeContract(request);
+    await waitForTransaction({ hash });
+    accountHasVoted(proposalId, address)
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'état du contrat:", error);
+  };
+};
+
+
+  // function voteAbstain
+  const voteAbstain = async (proposalId, address) => {
+    const support = 2;
+    const walletClient = await getWalletClient();
+    try{
+    const { request } = await prepareWriteContract({
+      address: contractAddressGovernorContract,
+      abi: abiGovernorContract,
+      functionName: 'castVote',
+      args: [proposalId, support],
+      account: walletClient.account,
+    });
+    const { hash } = await writeContract(request);
+    await waitForTransaction({ hash });
+    accountHasVoted(proposalId, address)
+  } catch (error) {
+    console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    
+  };
+};
 
 
   // combined proposals
@@ -31,22 +139,7 @@ export const GovernorContractProvider = ({ children }) => {
       return acc;
     }, []);
     setCombinedProposals(uniqueProposals);
-    console.log("Combined proposals updated:", uniqueProposals);
   }, [pastProposals, proposalEvents]);
-
-
-  useEffect(() => {
-    console.log("Current pastProposals:", pastProposals);
-  }, [pastProposals]);
-
-  useEffect(() => {
-    console.log("Current proposalEvents:", proposalEvents);
-  }, [proposalEvents]);
-
-  useEffect(() => {
-    console.log("Current combinedProposals:", combinedProposals);
-  }, [combinedProposals]);
-
 
   const getState = async (proposalId) => {
     const walletClient = await getWalletClient();
@@ -58,7 +151,6 @@ export const GovernorContractProvider = ({ children }) => {
         functionName: 'state',
         args: [proposalId],
       })
-      console.log("State for proposalId", proposalId, "is", data);
       return data; // Retourner l'état récupéré
     } catch (error) {
       console.error("Erreur lors de la récupération de l'état du contrat:", error);
@@ -67,7 +159,6 @@ export const GovernorContractProvider = ({ children }) => {
 
   //Get past proposal Ids
   useEffect(() => {
-    console.log("Component mounted");
     const getProposalIdsLogs = async () => {
       const proposalIdsLogs = await viemPublicClient.getLogs({
         address: contractAddressGovernorContract,
@@ -85,7 +176,6 @@ export const GovernorContractProvider = ({ children }) => {
         }
       }
       setPastProposals(newPastProposals);
-      console.log("Past proposals after update:", pastProposals);
     };
     getProposalIdsLogs();
   }, [isConnected]);
@@ -145,6 +235,14 @@ export const GovernorContractProvider = ({ children }) => {
     proposalEvents,
     getState,
     combinedProposals,
+    voteFor,
+    voteAgainst,
+    voteAbstain,
+    accountHasVoted,
+    hasVoted,
+    proposalVotes,
+
+  
 
   };
 
