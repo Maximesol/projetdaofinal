@@ -9,6 +9,7 @@ import { encodeFunctionData, stringToBytes, keccak256, stringToHex} from 'viem'
 import { prepareWriteContract, writeContract, waitForTransaction } from "@wagmi/core";
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useAccount, useContractEvent } from "wagmi";
+import {ethers } from 'ethers';
 
 
 
@@ -71,15 +72,8 @@ const ProposalDetails = ({ proposalId }) => {
   const functionToCall = 'transferEth';
   const args = [contractAddressTargetContract, amountInWei];
   const contractAbi = abiTokenGouv;
-  const description = stringToBytes("Transfert 10 eth from token gouv contrat to Target Contract!");
+  const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes("Transfert 10 eth from token gouv contrat to Target Contract!"))
 
-  
-
-  const descriptionHash = keccak256(description);
-  console.log("descriptionHash : ", descriptionHash)
-  
-  
-  
 
     const encodedData = encodeFunctionData({
       abi: contractAbi,
@@ -87,7 +81,6 @@ const ProposalDetails = ({ proposalId }) => {
       args: args,
     });
 
-    console.log(encodedData); 
  
 
   const targets = [contractAddressTokenGouv];
@@ -96,14 +89,14 @@ const ProposalDetails = ({ proposalId }) => {
 
   // function queue 
   
-  const addInQueue = async (targets, values, calldatas, description) => {
+  const addInQueue = async (targets, values, calldatas, descriptionHash) => {
     const walletClient = await getWalletClient();
     try {
       const { request } = await prepareWriteContract({
         address: contractAddressGovernorContract,
         abi: abiGovernorContract,
         functionName: "queue",
-        args: [targets, values, calldatas, description],
+        args: [targets, values, calldatas, descriptionHash],
         account: walletClient.account,
       });
       const { hash } = await writeContract(request);
@@ -268,7 +261,7 @@ const ProposalDetails = ({ proposalId }) => {
       targets,
       values,
       calldatas,
-      description)}
+      descriptionHash)}
       isDisabled={state?.name !== "Succeeded"}
     >
       Queue
