@@ -1,6 +1,6 @@
 {
-  "tokenGouvAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
-  "timeLockAddress": "0x0DCd1Bf9A1b36cE34237eEaFef220932846BCD82",
-  "governorContractAddress": "0x9A676e781A523b5d0C0e43731313A708CB607508",
-  "targetContractAddress": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d"
+  "tokenGouvAddress": "0x1f46294CCDF1721c7DDF23dA04627C88B0e7caA3",
+  "timeLockAddress": "0xc1373C906d5A09Ebb3aFc195dCe4b826ED1Ccd17",
+  "governorContractAddress": "0x0F5be1db645c373C1E08D374E5c040E98F8cf5Fd",
+  "targetContractAddress": "0x9d195a56e7e74cD106cb095B1006cD31eCF0d9B9"
 }
