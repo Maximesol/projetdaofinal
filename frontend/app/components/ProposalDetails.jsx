@@ -28,7 +28,7 @@ const getProposalStateDetails = (state) => {
   return states[state] || { name: "Unknown", color: "gray" };
 };
 
-const ProposalDetails = ({ proposalId }) => {         
+const ProposalDetails = ({ proposalId, description}) => {         
   const { getState, voteFor, voteAgainst, voteAbstain, accountHasVoted, hasVoted } = useContext(ContractContext);
   const [state, setState] = useState(null);
   const {address} = useAccount();
@@ -80,7 +80,7 @@ const ProposalDetails = ({ proposalId }) => {
   const functionToCall = 'transferEth';
   const args = [contractAddressTargetContract, amountInWei];
   const contractAbi = abiTokenGouv;
-  const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes("Transfert 10 eth from token gouv contrat to Target Contract!"))
+  const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes(description))
 
   
 
@@ -90,7 +90,6 @@ const ProposalDetails = ({ proposalId }) => {
       functionName: functionToCall,
       args: args,
     });
-  console.log("encodedData : ", encodedData)  
 
  
 
@@ -206,17 +205,6 @@ const ProposalDetails = ({ proposalId }) => {
   }, [dataVoteFor, dataVoteAgainst, dataVoteAbstain]);
 
 
-
-  // useEffect(() => {
-  //   console.log('Proposal ID:', proposalId);
-  //   if (proposalId) {
-  //     getState(proposalId).then(response => {
-  //       const stateDetails = getProposalStateDetails(response);
-  //       setState(stateDetails);
-  //     });
-  //   }
-  // }, [proposalId, getState]);
-
   useContractEvent({
     address: contractAddressGovernorContract, 
     abi: abiGovernorContract,
@@ -320,8 +308,7 @@ const ProposalDetails = ({ proposalId }) => {
     </Button>
     <Collapse in={showDetails} animateOpacity>
       <Box p={2} color="gray.300" mt={2} bg="gray.700" borderRadius="md" boxShadow="sm">
-        <Text fontSize="sm">Description de la proposition...</Text>
-        {/* Vous pouvez inclure plus de détails ici */}
+        <Text fontSize="sm">Description de la proposition : {description}</Text>
       </Box>
     </Collapse>
   </VStack>
