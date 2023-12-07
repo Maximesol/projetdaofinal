@@ -54,7 +54,6 @@ const ProposalForm = ({ onSubmit, isOpen, onClose }) => {
       args: args,
     });
 
-    console.log(encodedData); 
  
 
   const targets = [contractAddressTokenGouv];

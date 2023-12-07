@@ -20,7 +20,6 @@ export const GovernorContractProvider = ({ children }) => {
   const [executedEvents, setExecutedEvents] = useState([]);
 
 
-
   // function proposalVote
   const proposalVotes = async (proposalId) => {
     const walletClient = await getWalletClient();
@@ -32,7 +31,6 @@ export const GovernorContractProvider = ({ children }) => {
         functionName: 'proposalVotes',
         args: [proposalId],
       })
-      console.log("proposal vote : ", data)
       setVotesFor(data.forVotes);
       setVotesAgainst(data.againstVotes);
       setVotesAbstain(data.abstainVotes);
@@ -54,7 +52,6 @@ export const GovernorContractProvider = ({ children }) => {
         functionName: 'hasVoted',
         args: [proposalId, address],
       })
-      console.log("has voted : ", data)
       setHasVoted(data);
     } catch (error) {
       console.error("Erreur lors de la récupération de l'état du contrat:", error);
@@ -211,10 +208,6 @@ export const GovernorContractProvider = ({ children }) => {
     abi: abiGovernorContract,
     eventName: "ProposalCreated",
     listener: (events) => {
-      // for (const event of events) {
-      //   const { proposalId, description } = event.args;
-      //   console.log(`Nouvelle proposition enregistrée : ${description}, ID: ${proposalId}`);
-      // }
       const newEvents = events.map(event => ({
         proposalId: event.args.proposalId.toString(),
         description: event.args.description
@@ -238,7 +231,6 @@ export const GovernorContractProvider = ({ children }) => {
       setQueueEvents(prevEvents => [...prevEvents, ...newEvents]);
     },
   });
-  console.log(queueEvents);
 
   // event ProposalExecuted(uint256 proposalId);
   useContractEvent({

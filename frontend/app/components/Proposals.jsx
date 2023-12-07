@@ -11,7 +11,7 @@ const Proposals = () => {
   return (
     <div>
       {combinedProposals.map(event => (
-        <ProposalDetails key={event.proposalId} proposalId={event.proposalId} />
+        <ProposalDetails key={event.proposalId} proposalId={event.proposalId} description={event.description}/>
       ))}
     </div>
   );
