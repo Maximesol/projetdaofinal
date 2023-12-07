@@ -53,6 +53,15 @@ const ProposalDetails = ({ proposalId }) => {
       isClosable: true,
     });
   };
+  const showSuccessToastExecute = () => {
+    toast({
+      title: 'Proposition éxécutée',
+      description: "La proposition a bien été éxécuté.",
+      status: 'success',
+      duration: 5000,
+      isClosable: true,
+    });
+  };
 
   const showErrorToast = (error) => {
   toast({
@@ -64,7 +73,6 @@ const ProposalDetails = ({ proposalId }) => {
   });
 }
 
-
   const amountInEther = "10";
   const amountInWei = (parseFloat(amountInEther) * 1e18).toString();
   
@@ -74,12 +82,15 @@ const ProposalDetails = ({ proposalId }) => {
   const contractAbi = abiTokenGouv;
   const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes("Transfert 10 eth from token gouv contrat to Target Contract!"))
 
+  
+
 
     const encodedData = encodeFunctionData({
       abi: contractAbi,
       functionName: functionToCall,
       args: args,
     });
+  console.log("encodedData : ", encodedData)  
 
  
 
@@ -107,6 +118,31 @@ const ProposalDetails = ({ proposalId }) => {
       showErrorToast();
     }
   };
+
+  // function execute
+
+  const execute = async (targets, values, calldatas, descriptionHash) => {
+    const walletClient = await getWalletClient();
+    try {
+      const { request } = await prepareWriteContract({
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: "execute",
+        args: [targets, values, calldatas, descriptionHash],
+        account: walletClient.account,
+      });
+      const { hash } = await writeContract(request);
+      await waitForTransaction({ hash });
+      showSuccessToastExecute();
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de la proposal:", error);
+      showErrorToast();
+    }
+  };
+
+
+
+
 
   const proposalVotes = async (proposalId) => {
     const walletClient = await getWalletClient();
@@ -270,7 +306,12 @@ const ProposalDetails = ({ proposalId }) => {
       mt={2}
       size="sm"
       colorScheme="orange"
-      isDisabled={state?.name !== "ExecutableState"}
+      onClick={() => execute(
+      targets,
+      values,
+      calldatas,
+      descriptionHash)}
+      isDisabled={state?.name !== "Queued"}
     >
       Execute
     </Button>

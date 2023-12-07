@@ -10,6 +10,7 @@ const queueAndExecute =  async() => {
 
   const target = await ethers.getContractAt("TargetContract", targetContractAddress)
   const tokenGouvContract = await ethers.getContractAt("TokenGouv", tokenGouvAddress)
+  console.log("tokenGouvContract : ", tokenGouvContract)
 
   const targetAddress = target.target
   console.log(`Target address: ${targetAddress}`)
@@ -18,6 +19,8 @@ const queueAndExecute =  async() => {
   const amountInWei = ethers.parseEther("10");
 
   const encodedFunctionCall = tokenGouvContract.interface.encodeFunctionData(functionToCall, [targetAddress, amountInWei]);
+
+  console.log("encodedFunctionCall : ", )
 
 
   const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes(PROPOSAL_DESCRIPTION_2))
