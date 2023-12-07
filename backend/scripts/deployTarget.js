@@ -2,7 +2,7 @@ const hre = require("hardhat");
 const fs = require('fs');
 
 async function deployTarget() {
-  const [owner, addr1, addr2] = await hre.ethers.getSigners();
+  const [owner] = await hre.ethers.getSigners();
     console.log("Deploying contracts with the account:", owner.address);
 
   // Charger les adresses déployées

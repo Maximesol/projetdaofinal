@@ -3,7 +3,7 @@ const fs = require('fs');
 const {QUORUM_PERCENTAGE, MIN_DELAY, VOTING_PERIOD, VOTING_DELAY, ADDRESS_ZERO} = require("../helper-hardhat-config");
 
 async function deployGovernorContract() {
-  const [owner, addr1, addr2] = await hre.ethers.getSigners();
+  const [owner] = await hre.ethers.getSigners();
     console.log(
     "Deploying contracts with the account:",
     owner.address

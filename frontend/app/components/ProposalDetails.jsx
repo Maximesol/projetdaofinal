@@ -38,6 +38,8 @@ const ProposalDetails = ({ proposalId, description}) => {
   const [forPercentage, setForPercentage] = useState(0);
   const [againstPercentage, setAgainstPercentage] = useState(0);
   const [abstainPercentage, setAbstainPercentage] = useState(0);
+  const [hasVotedForThis, setHasVotedForThis] = useState(false);
+
   
   const [showDetails, setShowDetails] = useState(false);
   const toggleShowDetails = () => setShowDetails(!showDetails);
@@ -203,6 +205,7 @@ const ProposalDetails = ({ proposalId, description}) => {
     setAgainstPercentage(newAgainstPercentage);
     setAbstainPercentage(newAbstainPercentage);
   }, [dataVoteFor, dataVoteAgainst, dataVoteAbstain]);
+  
 
 
   useContractEvent({
