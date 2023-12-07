@@ -17,6 +17,7 @@ export const GovernorContractProvider = ({ children }) => {
   const viemPublicClient = usePublicClient();
   const [hasVoted, setHasVoted] = useState(false);
   const [queueEvents, setQueueEvents] = useState([]);
+  const [executedEvents, setExecutedEvents] = useState([]);
 
 
 
@@ -239,6 +240,16 @@ export const GovernorContractProvider = ({ children }) => {
   });
   console.log(queueEvents);
 
+  // event ProposalExecuted(uint256 proposalId);
+  useContractEvent({
+    address: contractAddressGovernorContract,
+    abi: abiGovernorContract,
+    eventName: "ProposalExecuted",
+    listener: (event) => {
+      const proposalId = event[0].args.proposalId.toString();
+      setExecutedEvents(proposalId);
+    },
+  });
 
 
 
@@ -251,7 +262,7 @@ export const GovernorContractProvider = ({ children }) => {
     if (isConnected) {
       getNumberOfProposals();
     }
-  }, [isConnected, queueEvents]);
+  }, [isConnected, queueEvents, executedEvents]);
 
   const contextValue = {
     numberOfProposals,
@@ -266,6 +277,10 @@ export const GovernorContractProvider = ({ children }) => {
     accountHasVoted,
     hasVoted,
     proposalVotes,
+    queueEvents,
+    executedEvents
+    
+
 
   
 
