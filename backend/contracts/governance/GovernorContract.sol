@@ -8,15 +8,27 @@ import "@openzeppelin/contracts/governance/extensions/GovernorVotes.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorVotesQuorumFraction.sol";
 import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.sol";
 
+//// @title GovernorContract
+/// @author Maxime GOGNIES  
+/// @notice Contrat de gouvernance pour le vote des propositions de gouvernance et l'exécution des propositions acceptées
+
 contract GovernorContract is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
 
+    /// @notice Compte le nombre de propositions faites
     uint256 public s_proposalCount;
 
+    /// @notice Construit un nouveau contrat de gouvernance
+    /// @dev Initialise les paramètres de gouvernance avec les valeurs fournies
+    /// @param _token Le token utilisé pour les votes
+    /// @param _timelock Le contrôleur de verrouillage temporel pour la gouvernance
+    /// @param _votingDelay Le délai avant le début du vote
+    /// @param _votingPeriod La durée pendant laquelle le vote est ouvert
+    /// @param _quorumPercentage Le pourcentage de quorum nécessaire pour les votes
     constructor(IVotes _token, TimelockController _timelock, uint48 _votingDelay, uint32 _votingPeriod, uint256 _quorumPercentage)
         Governor("GovernorContract")
         GovernorSettings(
-            _votingDelay, /* 0 days */
-            _votingPeriod, /* 3 days */
+            _votingDelay,
+            _votingPeriod,
             1)
         GovernorVotes(_token)
         GovernorVotesQuorumFraction(_quorumPercentage)
@@ -27,7 +39,12 @@ contract GovernorContract is Governor, GovernorSettings, GovernorCountingSimple,
 
     // The following functions are overrides required by Solidity.
 
-
+///@notice Fonction de proposition de gouvernance
+///@dev Vérifie si le proposant est autorisé à faire une proposition
+///@param targets Les adresses des contrats à appeler
+///@param values Les valeurs à envoyer aux contrats
+///@param calldatas Les données d'appel à envoyer aux contrats
+///@param description La description de la proposition
 function propose(
     address[] memory targets,
     uint256[] memory values,
