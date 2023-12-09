@@ -1,3 +1,4 @@
+'use client'
 import {useState, useContext, useEffect} from 'react';
 import { Box, Badge, Button, Progress, Text, VStack, HStack, useToast, Collapse } from '@chakra-ui/react';
 import { ContractContext } from '../context/GovernorContractProvider';
@@ -5,7 +6,7 @@ import { readContract, getWalletClient } from "@wagmi/core";
 import { abiGovernorContract, contractAddressGovernorContract } from '../constants/constantGovernorContract'
 import { abiTokenGouv, contractAddressTokenGouv } from '../constants/constantTokenGouv'
 import { abiTargetContract, contractAddressTargetContract } from '../constants/constantTargetContract'
-import { encodeFunctionData, stringToBytes, keccak256, stringToHex} from 'viem'
+import { encodeFunctionData} from 'viem'
 import { prepareWriteContract, writeContract, waitForTransaction } from "@wagmi/core";
 import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import { useAccount, useContractEvent } from "wagmi";
@@ -38,8 +39,10 @@ const ProposalDetails = ({ proposalId, description}) => {
   const [forPercentage, setForPercentage] = useState(0);
   const [againstPercentage, setAgainstPercentage] = useState(0);
   const [abstainPercentage, setAbstainPercentage] = useState(0);
-  const [hasVotedForThis, setHasVotedForThis] = useState(false);
-
+  const [timePoint, setTimePoint] = useState(0);
+  const [quorum, setQuorum] = useState(0);
+  const [quorumReachedState, setQuorumReachedState] = useState(false);
+  const [hasVotedForThisProposal, setHasVotedForThisProposal] = useState(false);
   
   const [showDetails, setShowDetails] = useState(false);
   const toggleShowDetails = () => setShowDetails(!showDetails);
@@ -75,6 +78,7 @@ const ProposalDetails = ({ proposalId, description}) => {
   });
 }
 
+
   const amountInEther = "10";
   const amountInWei = (parseFloat(amountInEther) * 1e18).toString();
   
@@ -83,17 +87,11 @@ const ProposalDetails = ({ proposalId, description}) => {
   const args = [contractAddressTargetContract, amountInWei];
   const contractAbi = abiTokenGouv;
   const descriptionHash = ethers.keccak256(ethers.toUtf8Bytes(description))
-
-  
-
-
-    const encodedData = encodeFunctionData({
+  const encodedData = encodeFunctionData({
       abi: contractAbi,
       functionName: functionToCall,
       args: args,
     });
-
- 
 
   const targets = [contractAddressTokenGouv];
   const values = [0];
@@ -142,7 +140,20 @@ const ProposalDetails = ({ proposalId, description}) => {
   };
 
 
-
+  const handleVote = async (voteType) => {
+    try {
+      if (voteType === 'for') {
+        await voteFor(proposalId, address);
+      } else if (voteType === 'against') {
+        await voteAgainst(proposalId, address);
+      } else { voteType === 'abstain'
+        await voteAbstain(proposalId, address);
+      }
+      setHasVotedForThisProposal(true);
+    } catch (error) {
+      console.error("Erreur lors du vote:", error);
+    }
+  };
 
 
   const proposalVotes = async (proposalId) => {
@@ -164,8 +175,74 @@ const ProposalDetails = ({ proposalId, description}) => {
     }
   };
 
+  const getTimePoint = async (proposalId) => {
+    const walletClient = await getWalletClient();
+    try {
+      const data = await readContract({
+        client: walletClient,
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: 'proposalSnapshot',
+        args: [proposalId],
+      })
+      console.log("Timepoint récupéré:", data);
+      setTimePoint(data); 
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    }
+  }
 
-  const quorumReached = false;
+  const getQuorum = async (timepoint) => {
+    const walletClient = await getWalletClient();
+    try {
+      const data = await readContract({
+        client: walletClient,
+        address: contractAddressGovernorContract,
+        abi: abiGovernorContract,
+        functionName: 'quorum',
+        args: [timepoint],
+      })
+      console.log("data dans getQuorum : ", data)
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération de l'état du contrat:", error);
+    }
+  }
+
+  useEffect(() => {
+    if (proposalId) {
+      getTimePoint(proposalId);
+    }
+  }, [proposalId]);
+
+  useEffect(() => {
+    if (timePoint) {
+      getQuorum(timePoint).then(data => {
+        setQuorum(data);
+      })
+    }
+  }, [timePoint]);
+
+  const checkQuorumReached = () => {
+    const totalVotes = dataVoteFor + dataVoteAgainst + dataVoteAbstain;
+    return totalVotes >= quorum;
+  };
+
+  useEffect(() => {
+    const checkIfAccountHasVoted = async () => {
+      try {
+        const hasVoted = await accountHasVoted(proposalId, address);
+        setHasVotedForThisProposal(hasVoted);
+      } catch (error) {
+        console.error("Erreur lors de la vérification du vote:", error);
+        setHasVotedForThisProposal(false);
+      }
+    };
+  
+    if (proposalId && address) {
+      checkIfAccountHasVoted();
+    }
+  }, [address, proposalId]);
 
 
   useEffect(() => {
@@ -173,9 +250,11 @@ const ProposalDetails = ({ proposalId, description}) => {
       proposalVotes(proposalId)
         .then(data => {
           if (data) {
-            setDataVoteFor(Number(data[1])); // Accès direct à la valeur
+            setDataVoteFor(Number(data[1]));
             setDataVoteAgainst(Number(data[0]));
             setDataVoteAbstain(Number(data[2]));
+            const quorumAtteint = checkQuorumReached();
+            setQuorumReachedState(quorumAtteint);
           }
         })
         .catch(error => {
@@ -184,6 +263,7 @@ const ProposalDetails = ({ proposalId, description}) => {
     }
   }, [proposalId]);
 
+
   useEffect(() => {
     if (proposalId && address) {
       getState(proposalId).then(response => {
@@ -191,7 +271,7 @@ const ProposalDetails = ({ proposalId, description}) => {
         setState(stateDetails);
       });
   
-      accountHasVoted(proposalId, address); // Cette fonction met à jour hasVoted dans le contexte
+      accountHasVoted(proposalId, address);
     }
   }, [proposalId, address, getState, accountHasVoted, hasVoted]);
 
@@ -204,7 +284,9 @@ const ProposalDetails = ({ proposalId, description}) => {
     setForPercentage(newForPercentage);
     setAgainstPercentage(newAgainstPercentage);
     setAbstainPercentage(newAbstainPercentage);
-  }, [dataVoteFor, dataVoteAgainst, dataVoteAbstain]);
+    const quorumAtteint = checkQuorumReached();
+    setQuorumReachedState(quorumAtteint);
+  }, [dataVoteFor, dataVoteAgainst, dataVoteAbstain, quorum]);
   
 
 
@@ -235,31 +317,31 @@ const ProposalDetails = ({ proposalId, description}) => {
 
   return (
     <Box p={4} borderWidth="1px" borderRadius="lg" bg="gray.800" boxShadow="sm" mb={3} borderColor="gray.600">
-  <VStack spacing={3} align="stretch">
-    <HStack justify="space-between">
-      <VStack align="start">
-        <Text fontSize="md" fontWeight="semibold" color="gray.100">Proposal ID: {proposalId}</Text>
-        <HStack>
-          {state && (
-            <Badge colorScheme={state.color} px={2} py={1} borderRadius="full">
-              {state.name}
-            </Badge>
-          )}
-          {quorumReached ? (
-            <Badge colorScheme="green" ml={2} px={2} py={1} borderRadius="full">
-              Quorum Reached <CheckCircleIcon color="green.500" />
-            </Badge>
-          ) : (
-            <Badge colorScheme="red" ml={2} px={2} py={1} borderRadius="full">
-              Quorum Not Reached <WarningIcon color="red.500" />
-            </Badge>
-          )}
-        </HStack>
-      </VStack>
+      <VStack spacing={3} align="stretch">
+        <HStack justify="space-between">
+          <VStack align="start">
+            <Text fontSize="md" fontWeight="semibold" color="gray.100">Proposal ID: {proposalId}</Text>
+              <HStack>
+                {state && (
+                  <Badge colorScheme={state.color} px={2} py={1} borderRadius="full">
+                  {state.name}
+                   </Badge>
+                  )}
+                  {quorumReachedState ? (
+                  <Badge colorScheme="green" ml={2} px={2} py={1} borderRadius="full">
+                  Quorum Reached <CheckCircleIcon color="green.500" />
+                  </Badge>
+                  ) : (
+                  <Badge colorScheme="red" ml={2} px={2} py={1} borderRadius="full">
+                  Quorum Not Reached <WarningIcon color="red.500" />
+                  </Badge>
+                 )}
+              </HStack>
+          </VStack>
       <VStack align="end" spacing={1} flex={1}>
         <HStack w="full" justify="space-between">
           <Text fontSize="xs" color="gray.100">For</Text>
-          <Progress value={forPercentage} size="sm" colorScheme="green" w="80%" />
+            <Progress value={forPercentage} size="sm" colorScheme="green" w="80%" />
           <Text fontSize="xs" color="gray.100" minWidth="4ch" textAlign="right">{forPercentage.toFixed(0)}%</Text>
         </HStack>
         <HStack w="full" justify="space-between">
@@ -275,10 +357,10 @@ const ProposalDetails = ({ proposalId, description}) => {
       </VStack>
     </HStack>
     <HStack justify="end" spacing={3} pt={2}>
-      <Button size="sm" colorScheme="green" onClick={() => voteFor(proposalId, address)} 
-      isDisabled={hasVoted}>For</Button>
-      <Button size="sm" colorScheme="red" onClick={() => voteAgainst(proposalId, address)} isDisabled={hasVoted}>Against</Button>
-      <Button size="sm" colorScheme="gray" onClick={() => voteAbstain(proposalId, address)} isDisabled={hasVoted}>Abstain</Button>
+      <Button size="sm" colorScheme="green" onClick={() => handleVote('for')} 
+      isDisabled={hasVotedForThisProposal}>For</Button>
+      <Button size="sm" colorScheme="red" onClick={() => handleVote('against')} isDisabled={hasVotedForThisProposal}>Against</Button>
+      <Button size="sm" colorScheme="gray" onClick={() => handleVote('abstain')} isDisabled={hasVotedForThisProposal}>Abstain</Button>
     </HStack>
     <Button
       mt={2}
