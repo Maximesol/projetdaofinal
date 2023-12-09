@@ -244,12 +244,6 @@ export const GovernorContractProvider = ({ children }) => {
   });
 
 
-
-
-
-
-
-
   useEffect(() => {
     if (isConnected) {
       getNumberOfProposals();
