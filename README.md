@@ -20,8 +20,8 @@ Defi Capital Partner est une organisation décentralisée et autonome d'investis
 # 🔗Lien Utiles
 
 
-  
 
+✅ Vidéo de présentation de 5mn Loom : https://www.loom.com/share/0fa60e5e96b7424f85acbbf996d076e9?sid=00adbbc4-f896-4990-a4a4-347f21777df8
 ✅ Déployé sur Vercel: https://frontend-bay-five.vercel.app
 frontend-bay-five.vercel.app
 
