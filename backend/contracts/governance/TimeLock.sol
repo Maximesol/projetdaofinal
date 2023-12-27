@@ -6,14 +6,14 @@ import "@openzeppelin/contracts/governance/TimelockController.sol";
 
 //// @title TimeLock
 /// @author Maxime GOGNIES
-/// @notice Ce contrat implémente un contrôleur de verrouillage temporel pour la gouvernance
+/// @notice This contract implements a time lock controller for governance
 contract TimeLock is TimelockController {
-    /// @notice Construit un nouveau contrôleur de verrouillage temporel
-    /// @dev Initialise le contrôleur avec les paramètres spécifiés
-    /// @param _minDelay Le délai minimal avant qu'une proposition puisse être exécutée
-    /// @param _proposers La liste des adresses autorisées à créer des propositions
-    /// @param _executors La liste des adresses autorisées à exécuter des propositions
-    /// @param _admin L'adresse autorisée à modifier les proposants, les exécuteurs et le délai minimal
+    /// @notice Built a new time lock controller
+    /// @dev Initializes the controller with the specified parameters
+    /// @param _minDelay The minimum time before a proposal can be executed
+    /// @param _proposers The list of addresses authorized to create proposals
+    /// @param _executors The list of addresses authorized to execute proposals
+    /// @param _admin The address authorized to modify the proponents, executors and the minimum period
     constructor(
         uint256 _minDelay,
         address[] memory _proposers,

@@ -10,20 +10,20 @@ import "@openzeppelin/contracts/governance/extensions/GovernorTimelockControl.so
 
 //// @title GovernorContract
 /// @author Maxime GOGNIES  
-/// @notice Contrat de gouvernance pour le vote des propositions de gouvernance et l'exécution des propositions acceptées
+/// @notice Governance contract for voting on governance proposals and execution of accepted proposals
 
 contract GovernorContract is Governor, GovernorSettings, GovernorCountingSimple, GovernorVotes, GovernorVotesQuorumFraction, GovernorTimelockControl {
 
-    /// @notice Compte le nombre de propositions faites
+    /// @notice Count the number of suggestions made
     uint256 public s_proposalCount;
 
-    /// @notice Construit un nouveau contrat de gouvernance
-    /// @dev Initialise les paramètres de gouvernance avec les valeurs fournies
-    /// @param _token Le token utilisé pour les votes
-    /// @param _timelock Le contrôleur de verrouillage temporel pour la gouvernance
-    /// @param _votingDelay Le délai avant le début du vote
-    /// @param _votingPeriod La durée pendant laquelle le vote est ouvert
-    /// @param _quorumPercentage Le pourcentage de quorum nécessaire pour les votes
+    /// @notice Built a new governance contract
+    /// @dev Initializes governance settings with the provided values
+    /// @param _token The token used for votes
+    /// @param _timelock The timelock controller for governance
+    /// @param _votingDelay The time before the start of the vote
+    /// @param _votingPeriod The length of time voting is open
+    /// @param _quorumPercentage The percentage of quorum required for votes
     constructor(IVotes _token, TimelockController _timelock, uint48 _votingDelay, uint32 _votingPeriod, uint256 _quorumPercentage)
         Governor("GovernorContract")
         GovernorSettings(
@@ -39,12 +39,12 @@ contract GovernorContract is Governor, GovernorSettings, GovernorCountingSimple,
 
     // The following functions are overrides required by Solidity.
 
-///@notice Fonction de proposition de gouvernance
-///@dev Vérifie si le proposant est autorisé à faire une proposition
-///@param targets Les adresses des contrats à appeler
-///@param values Les valeurs à envoyer aux contrats
-///@param calldatas Les données d'appel à envoyer aux contrats
-///@param description La description de la proposition
+///@notice Governance proposal function
+///@dev Checks if the nominator is authorized to make a proposal
+///@param targets The addresses of the contracts to call
+///@param values Values ​​to send to contracts
+///@param calldatas Call data to send to contracts
+///@param description Description of the proposal
 function propose(
     address[] memory targets,
     uint256[] memory values,
@@ -53,12 +53,12 @@ function propose(
 ) public override returns (uint256) {
     address proposer = _msgSender();
 
-    // Vérifier la restriction de description
+    // Check description restriction
     if (!_isValidDescriptionForProposer(proposer, description)) {
         revert GovernorRestrictedProposer(proposer);
     }
 
-    // Vérifier le seuil de proposition
+    // Check the proposal threshold
     uint256 proposerVotes = getVotes(proposer, clock() - 1);
     uint256 votesThreshold = proposalThreshold();
     if (proposerVotes < votesThreshold) {
@@ -66,7 +66,7 @@ function propose(
     }
 
 
-    // Incrémenter le compteur de propositions
+    // Increment the proposal counter
     s_proposalCount += 1;
 
     return _propose(targets, values, calldatas, description, proposer);

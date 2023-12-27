@@ -19,11 +19,8 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     uint256 public constant s_maxSupply = 1000000 * 10**18;
     uint256 public constant s_maxETHContributionIco = 10 ether;
     uint256 public rate = 5000; // 1 ETH = 5000 TokenGouv (ICO), after we can change it
-    //uint256 public icoStartTime;
-    //uint256 public icoEndTime;
     mapping(address => bool) private whitelist;
 
-    // modifier qui accepte uniquement les appels de l'addresse de verouillage TimeLock
     modifier onlyTimeLock() {
         require(msg.sender == timeLockAddress, "Caller is not TimeLock");
         _;
@@ -36,9 +33,9 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     {}
 
 
-    /// @notice Ajoute une adresse à la liste blanche
-    /// @dev Seul le propriétaire peut appeler cette fonction
-    /// @param investor L'adresse à ajouter à la liste blanche
+    /// @notice Add address to whitelist
+    /// @dev Only owner can call this function
+    /// @param investor The address to add to the whitelist
     function addToWhitelist(address investor) public onlyOwner {
     require(!whitelist[investor], "Investor already whitelisted");
     whitelist[investor] = true;
@@ -46,16 +43,16 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
 }
 
 
-    /// @notice Vérifie si une adresse est dans la liste blanche
-    /// @param investor L'adresse à vérifier
-    /// @return bool Vrai si l'adresse est dans la liste blanche
+    /// @notice Verify if an address is whitelisted
+    /// @param investor The address to verify
+    /// @return bool True if the address is whitelisted, false otherwise
     function isWhitelisted(address investor) public view returns (bool) {
         return whitelist[investor];
     }
 
-    /// @notice Permet l'achat de tokens pendant l'ICO
-    /// @dev Nécessite que l'adresse soit sur la liste blanche et respecte les limites de contribution
-    /// @dev La contribution en ETH doit être positive et ne pas dépasser le maximum autorisé
+    /// @notice Autorise buying tokens during the ICO
+    /// @dev Requires address to be whitelisted and meets contribution limits
+    /// @dev The ETH contribution must be positive and not exceed the maximum allowed
     function buyTokens() public payable {
         require(isWhitelisted(msg.sender), "Address not whitelisted");
         require(msg.value > 0 && msg.value <= s_maxETHContributionIco, "Invalid ETH amount");
@@ -65,10 +62,9 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         _mint(msg.sender, tokenAmount);
     }
 
-    /// @notice Permet l'achat de tokens après l'ICO
-    /// @dev La contribution en ETH doit être positive
+    /// @notice Allows the purchase of tokens after the ICO
+    /// @dev The ETH contribution must be positive
     function buyTokensAfterIco() public payable {
-        //require(block.timestamp >= icoEndTime, "ICO still active");
         require(msg.value > 0, "Invalid ETH amount");
         uint256 tokenAmount = msg.value * rate;
         uint256 newTotalSupply = totalSupply() + tokenAmount;
@@ -77,20 +73,20 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     }
 
 
-    /// @notice Crée de nouveaux tokens et les attribue à une adresse
-    /// @dev Seul le propriétaire peut appeler cette fonction
-    /// @param to Adresse qui recevra les nouveaux tokens
-    /// @param amount Le montant de tokens à créer
+    /// @notice Creates new tokens and assigns them to an address
+    /// @dev Only the owner can call this function
+    /// @param to The address to which the tokens will be assigned
+    /// @param amount The amount of tokens to be created
     function mint(address to, uint256 amount) public onlyOwner {
         uint256 newTotalSupply = totalSupply() + amount;
         require(newTotalSupply <= s_maxSupply, "Exceeds max supply");
         _mint(to, amount);
     }
 
-    /// @notice Transfère l'ETH à une adresse spécifiée
-    /// @dev Seul l'adresse TimeLock peut appeler cette fonction donc cette fonction ne peux etre appelée que suite à une proposition de vote de la dao.
-    /// @param _to Adresse destinataire de l'ETH
-    /// @param _amount Montant d'ETH à transférer
+    /// @notice Transfers ETH to a specified address
+    /// @dev Only the TimeLock address can call this function so this function can only be called following a voting proposal from the dao.
+    /// @param _to ETH recipient address
+    /// @param _amount ETH amount to transfer
     function transferEth(address payable _to, uint256 _amount) public onlyTimeLock {
     require(address(this).balance >= _amount, "Insufficient balance");
     _to.transfer(_amount);
@@ -99,7 +95,7 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
     receive() external payable {
     }
 
-    // Overrides requis par Solidity
+    // Override functions from ERC20Votes
 
     function _update(address from, address to, uint256 value)
         internal
@@ -117,16 +113,16 @@ contract TokenGouv is ERC20, Ownable, ERC20Permit, ERC20Votes {
         return super.nonces(owner);
     }
 
-    /// @notice Définit un nouveau taux de conversion ETH-Token
-    /// @dev Seul le propriétaire peut appeler cette fonction
-    /// @param newRate Le nouveau taux de conversion
+    /// @notice Sets a new ETH-Token conversion rate
+    /// @dev Only the owner can call this function
+    /// @param newRate The new conversion rate
     function setRate(uint256 newRate) public onlyOwner {
         rate = newRate;
     }
 
-    /// @notice Définit une nouvelle adresse TimeLock
-    /// @dev Seul le propriétaire peut appeler cette fonction
-    /// @param _newTimeLockAddress La nouvelle adresse TimeLock
+    /// @notice Sets a new TimeLock address
+    /// @dev Only the owner can call this function
+    /// @param _newTimeLockAddress  The new TimeLock address
     function setTimeLockAddress(address _newTimeLockAddress) public onlyOwner {
         require(_newTimeLockAddress != address(0), "Invalid TimeLock address");
         timeLockAddress = _newTimeLockAddress;
